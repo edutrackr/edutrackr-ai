@@ -60,7 +60,7 @@ def detect_blinks(
     video_path: str,
     blink_threshold=0.2,
     discarded_frames="auto", # Number of frames to discard in a second
-    shape_predictor_path="shape_predictor_68_face_landmarks.dat"
+    shape_predictor_path="resources/shape_predictor_68_face_landmarks.dat"
 ):
     # Initialize dlib's face detector and face landmark predictor
     detector = dlib.get_frontal_face_detector()
@@ -83,7 +83,7 @@ def detect_blinks(
     if discarded_frames == "auto":
         discaded_frames_rate = 0.1 # Sample rate should not be higher than 10% of FPS to avoid loosing analysis quality
         discarded_frames = int(fps * discaded_frames_rate)
-        print(discarded_frames)
+        #print(discarded_frames)
 
     eye_closed = False
     blinks = 0
