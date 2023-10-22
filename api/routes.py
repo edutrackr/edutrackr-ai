@@ -3,20 +3,27 @@ from api.models.blink_response  import BlinkResponse
 from algorithms.attention_level.attention import detect_blinks
 from algorithms.emotion_detection.emotion import emotionR
 from fastapi import APIRouter
+from pydantic import BaseModel
+
+class EmotionRequest (BaseModel):
+    path :str
+
+class AttentionRequest(BaseModel):
+    path : str
 
 router = APIRouter()
 
-@router.get("/emotions/{path}")
-def emotions(path:str):
-    root=f"video_samples/emotion/{path}.mp4"
+@router.post("/emotions")
+def emotions(request : EmotionRequest) -> EmotionResponse:
+    root=f"video_samples/emotion/{request.path}.mp4"
     emotion,percentage =emotionR(root)
     response_data = EmotionResponse(emotion=emotion, percentage=percentage)
     return response_data
     
 
-@router.get("/blinks/{path}")
-def blinks(path:str):
-    root=f"video_samples/attention/{path}.mp4"
+@router.post("/attention")
+def blinks(request: AttentionRequest)->BlinkResponse:
+    root=f"video_samples/attention/{request.path}.mp4"
     blinks, duration, blink_rate = detect_blinks(root)
     blink_rate_min= (blink_rate)*60
     if blink_rate_min >= 50:
