@@ -16,8 +16,8 @@ router = APIRouter()
 @router.post("/emotions")
 def emotions(request : EmotionRequest) -> EmotionResponse:
     root=f"video_samples/emotion/{request.path}.mp4"
-    emotion,percentage =emotionR(root)
-    response_data = EmotionResponse(emotion=emotion, percentage=percentage)
+    result =emotionR(root)
+    response_data = EmotionResponse(result=result)
     return response_data
     
 

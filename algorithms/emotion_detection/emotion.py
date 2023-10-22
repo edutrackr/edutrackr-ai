@@ -1,6 +1,8 @@
+from decimal import Decimal
 from tensorflow.keras.applications.imagenet_utils import preprocess_input
 from tensorflow.keras.preprocessing.image import img_to_array
 from tensorflow.keras.models import load_model
+from api.models.emotion_response import EmotionDetail
 import numpy as np
 import imutils
 import cv2
@@ -72,28 +74,27 @@ def predict_emotion(frame,faceNet,emotionModel):
 	return (locs,preds)
 
 def emotionR(videopath:str):
-	emotionLabel = ''
-	percentage = ''
 	cam = cv2.VideoCapture(videopath)
 	# Se toma un frame de la cámara y se redimensiona
 	ret, frame = cam.read()
 	frame = imutils.resize(frame, width=640)
 	(locs, preds) = predict_emotion(frame,faceNet,emotionModel)
-	# Para cada hallazgo se dibuja en la imagen el bounding box y la clase
-	for (box, pred) in zip(locs, preds):
-		
-		(Xi, Yi, Xf, Yf) = box
-		(angry,disgust,fear,happy,neutral,sad,surprise) = pred
+	
+	if len(preds)==0:
+		return []
 
+	pred=preds[0]
+	result = []
 
-		label = ''
-		# Se agrega la probabilidad en el label de la imagen
-		label = "{}: {:.0f}%".format(classes[np.argmax(pred)], max(angry,disgust,fear,happy,neutral,sad,surprise) * 100)
-		emotionLabel= "{}".format(classes[np.argmax(pred)])
-		percentage="{:.2f}".format(max(angry,disgust,fear,happy,neutral,sad,surprise))
-		# cv2.rectangle(frame, (Xi, Yi-40), (Xf, Yi), (255,0,0), -1)
-		# cv2.putText(frame, label, (Xi+5, Yi-15),cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0,255,0), 2)
-		# cv2.rectangle(frame, (Xi, Yi), (Xf, Yf), (255,0,0), 3)
+	for i in range(0, len(pred)):
+		roundedConfidence = "{:.2f}".format(pred[i])
+		result.append(EmotionDetail(
+			label=classes[i],
+			confidence=Decimal(roundedConfidence)
+		))
+
+	# Muestra el resultado para la emoción más predominante
+	# label = "{}: {:.2f}%".format(classes[np.argmax(pred)], max(angry,disgust,fear,happy,neutral,sad,surprise) * 100)
 		
 	cam.release()
-	return emotionLabel,percentage
+	return result
