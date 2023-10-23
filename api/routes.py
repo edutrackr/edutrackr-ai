@@ -1,31 +1,26 @@
-from api.models.emotion_response  import EmotionResponse
-from api.models.blink_response  import BlinkResponse 
-from algorithms.attention_level.attention import detect_blinks
-from algorithms.emotion_detection.emotion import emotionR
 from fastapi import APIRouter
-from pydantic import BaseModel
+from api.models.attention_level import AttentionLevelRequest, AttentionLevelResponse
+from api.models.emotions import EmotionsRequest, EmotionsResponse
+from algorithms.blinking import analyze_blinks
+from algorithms.emotions import analyze_emotions
 
-class EmotionRequest (BaseModel):
-    path :str
 
-class AttentionRequest(BaseModel):
-    path : str
+router = APIRouter(prefix="/analytics")
 
-router = APIRouter()
 
 @router.post("/emotions")
-def emotions(request : EmotionRequest) -> EmotionResponse:
-    root=f"video_samples/emotion/{request.path}.mp4"
-    result =emotionR(root)
-    response_data = EmotionResponse(result=result)
+def emotions(request: EmotionsRequest) -> EmotionsResponse:
+    root = f"video_samples/emotion/{request.path}.mp4"
+    result = analyze_emotions(root)
+    response_data = EmotionsResponse(result=result)
     return response_data
-    
 
-@router.post("/attention")
-def blinks(request: AttentionRequest)->BlinkResponse:
-    root=f"video_samples/attention/{request.path}.mp4"
-    blinks, duration, blink_rate = detect_blinks(root)
-    blink_rate_min= (blink_rate)*60
+
+@router.post("/attentionLevel")
+def blinks(request: AttentionLevelRequest) -> AttentionLevelResponse:
+    root = f"video_samples/attention/{request.path}.mp4"
+    blinks, duration, blink_rate = analyze_blinks(root)
+    blink_rate_min = (blink_rate)*60
     if blink_rate_min >= 50:
         estado = "Atento"
     elif 36 <= blink_rate_min < 50:
@@ -33,7 +28,7 @@ def blinks(request: AttentionRequest)->BlinkResponse:
     else:
         estado = "Muy cansado"
 
-    response_data = BlinkResponse(
+    response_data = AttentionLevelResponse(
         blinks=blinks,
         duration=duration,
         blink_rate_min=blink_rate_min,

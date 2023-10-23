@@ -1,11 +1,10 @@
-from typing import Literal
 import dlib
 import cv2
 import numpy as np
 from numpy.linalg import norm
 
 def __mid_line_distance(p1 ,p2, p3, p4):
-    """compute the euclidean distance between the midpoints of the two sets of points"""
+    """Compute the euclidean distance between the midpoints of the two sets of points"""
     p5 = np.array([int((p1[0] + p2[0])/2), int((p1[1] + p2[1])/2)])
     p6 = np.array([int((p3[0] + p4[0])/2), int((p3[1] + p4[1])/2)])
 
@@ -14,9 +13,8 @@ def __mid_line_distance(p1 ,p2, p3, p4):
 def __aspect_ratio(landmarks, eye_range):
     # Get the eye coordinates
     eye = np.array(
-        [np.array([landmarks.part(i).x, landmarks.part(i).y]) 
-        for i in eye_range]
-        )
+        [np.array([landmarks.part(i).x, landmarks.part(i).y]) for i in eye_range]
+    )
     # compute the euclidean distances
     B = norm(eye[0] - eye[3])
     A = __mid_line_distance(eye[1], eye[2], eye[5], eye[4])
@@ -56,7 +54,7 @@ def __new_size(width: int, height: int):
 
     return new_width, new_height
 
-def detect_blinks(
+def analyze_blinks(
     video_path: str,
     blink_threshold=0.2,
     discarded_frames="auto", # Number of frames to discard in a second

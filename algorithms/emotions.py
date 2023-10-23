@@ -1,11 +1,11 @@
+import os
+import cv2
+import imutils
+import numpy as np
 from decimal import Decimal
 from tensorflow.keras.preprocessing.image import img_to_array
 from tensorflow.keras.models import load_model
-from api.models.emotion_response import EmotionDetail
-import numpy as np
-import imutils
-import cv2
-import os
+from api.models.emotions import EmotionDetail
 
 # Disable tensorflow compilation warnings
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
@@ -26,7 +26,7 @@ emotionModel = load_model("resources/modelFEC.h5")
 
 # Toma la imagen, los modelos de detección de rostros y mascarillas 
 # Retorna las localizaciones de los rostros y las predicciones de emociones de cada rostro
-def predict_emotion(frame,faceNet,emotionModel):
+def __predict_emotion(frame,faceNet,emotionModel):
 	# Construye un blob de la imagen
 	blob = cv2.dnn.blobFromImage(frame, 1.0, (224, 224),(104.0, 177.0, 123.0))
 	
@@ -72,12 +72,12 @@ def predict_emotion(frame,faceNet,emotionModel):
 
 	return (locs,preds)
 
-def emotionR(videopath:str):
+def analyze_emotions(videopath:str):
 	cam = cv2.VideoCapture(videopath)
 	# Se toma un frame de la cámara y se redimensiona
 	ret, frame = cam.read()
 	frame = imutils.resize(frame, width=640)
-	(locs, preds) = predict_emotion(frame,faceNet,emotionModel)
+	(locs, preds) = __predict_emotion(frame,faceNet,emotionModel)
 	
 	if len(preds)==0:
 		return []
