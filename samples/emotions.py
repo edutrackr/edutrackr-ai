@@ -1,3 +1,11 @@
+import os
+import sys
+
+app_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(app_path) # This is to allow the import of config.py
+
+###
+
 import cv2
 import time
 import imutils

@@ -1,14 +1,13 @@
 from fastapi import APIRouter
+from config import AppConfig
+from api.common.utils import get_path
 from api.models.attention_level import AttentionLevelRequest, AttentionLevelResponse
 from api.models.emotions import EmotionsRequest, EmotionsResponse
-from algorithms.blinking import analyze_blinks
-from algorithms.emotions import analyze_emotions
-from config import AppConfig
-from common.utils import get_path
+from api.algorithms.blinking import analyze_blinks
+from api.algorithms.emotions import analyze_emotions
 
 
 router = APIRouter(prefix="/analytics")
-
 
 @router.post("/emotions")
 def emotions(request: EmotionsRequest) -> EmotionsResponse:
@@ -16,7 +15,6 @@ def emotions(request: EmotionsRequest) -> EmotionsResponse:
     result = analyze_emotions(full_path)
     response_data = EmotionsResponse(result=result)
     return response_data
-
 
 @router.post("/attentionLevel")
 def blinks(request: AttentionLevelRequest) -> AttentionLevelResponse:

@@ -1,7 +1,10 @@
 import os
+import sys
 from dotenv import load_dotenv
-from common.utils import get_env, has_arg
+from api.common.utils import get_env, get_path, has_arg
 
+app_path = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(app_path)
 
 IS_DEV = has_arg("--dev")
 if IS_DEV:
@@ -10,13 +13,13 @@ if IS_DEV:
 class AppConfig:
     IS_DEV = IS_DEV
     PORT = int(get_env("PORT", 8000))
-    STORAGE_PATH = get_env("STORAGE_PATH", os.path.join(os.getcwd(), "video_samples"))
+    STORAGE_PATH = get_env("STORAGE_PATH", os.path.join(os.getcwd(), "tests/videos"))
 
 class AIConfig:
     class Blinking:
-        SHAPE_PREDICTOR_PATH = "resources/blinking/shape_predictor_68_face_landmarks.dat"
+        SHAPE_PREDICTOR_PATH = get_path(app_path, "resources/blinking/shape_predictor_68_face_landmarks.dat")
 
     class Emotions:
-        PROTOTXT_PATH = "resources/emotions/face_detector/deploy.prototxt"
-        WEIGHTS_PATH = "resources/emotions/face_detector/res10_300x300_ssd_iter_140000.caffemodel"
-        CLASSIFICATION_MODEL_PATH = "resources/emotions/modelFEC.h5"
+        PROTOTXT_PATH = get_path(app_path, "resources/emotions/face_detector/deploy.prototxt")
+        WEIGHTS_PATH = get_path(app_path, "resources/emotions/face_detector/res10_300x300_ssd_iter_140000.caffemodel")
+        CLASSIFICATION_MODEL_PATH = get_path(app_path, "resources/emotions/modelFEC.h5")

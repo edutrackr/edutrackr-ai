@@ -1,14 +1,9 @@
-import sys
-import os
 import uvicorn
 from fastapi import FastAPI
-from common.utils import has_arg
 from config import AppConfig
 from api.routes import router
+from api.common.utils import has_arg
 
-
-project_root = os.getcwd()
-sys.path.append(project_root)
 
 app = FastAPI(
     title="Edutrackr AI",
