@@ -1,5 +1,4 @@
 from decimal import Decimal
-from tensorflow.keras.applications.imagenet_utils import preprocess_input
 from tensorflow.keras.preprocessing.image import img_to_array
 from tensorflow.keras.models import load_model
 from api.models.emotion_response import EmotionDetail
