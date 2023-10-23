@@ -1,4 +1,5 @@
 import os
+import sys
 
 
 def get_env(key, default=None):
@@ -12,3 +13,6 @@ def get_path(base_path, file_path):
     if not os.path.exists(full_path):
         raise ValueError(f"Path '{full_path}' does not exist")
     return full_path
+
+def has_arg(arg):
+    return arg in sys.argv

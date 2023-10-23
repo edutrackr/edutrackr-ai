@@ -1,11 +1,14 @@
 import os
 from dotenv import load_dotenv
-from common.utils import get_env
+from common.utils import get_env, has_arg
 
 
-load_dotenv()
+IS_DEV = has_arg("--dev")
+if IS_DEV:
+    load_dotenv()
 
 class AppConfig:
+    IS_DEV = IS_DEV
     PORT = int(get_env("PORT", 8000))
     STORAGE_PATH = get_env("STORAGE_PATH", os.path.join(os.getcwd(), "video_samples"))
 
