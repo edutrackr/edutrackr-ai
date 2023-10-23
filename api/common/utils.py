@@ -16,3 +16,9 @@ def get_path(base_path, file_path):
 
 def has_arg(arg):
     return arg in sys.argv
+
+def gen_key():
+    return str(os.urandom(16).hex())
+
+if __name__ == "__main__":
+    print(gen_key())

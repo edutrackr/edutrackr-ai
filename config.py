@@ -15,6 +15,10 @@ class AppConfig:
     PORT = int(get_env("PORT", 8000))
     STORAGE_PATH = get_env("STORAGE_PATH", os.path.join(os.getcwd(), "tests/videos"))
 
+    class Auth:
+        API_KEY = get_env("API_KEY")
+        API_KEY_NAME = "api_key"
+
 class AIConfig:
     class Blinking:
         SHAPE_PREDICTOR_PATH = get_path(app_path, "resources/blinking/shape_predictor_68_face_landmarks.dat")

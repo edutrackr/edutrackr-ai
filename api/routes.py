@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from api.auth import APIKeyValidation
 from config import AppConfig
 from api.common.utils import get_path
 from api.models.attention_level import AttentionLevelRequest, AttentionLevelResponse
@@ -7,7 +8,7 @@ from api.algorithms.blinking import analyze_blinks
 from api.algorithms.emotions import analyze_emotions
 
 
-router = APIRouter(prefix="/analytics")
+router = APIRouter(prefix="/analytics", dependencies=[APIKeyValidation])
 
 @router.post("/emotions")
 def emotions(request: EmotionsRequest) -> EmotionsResponse:

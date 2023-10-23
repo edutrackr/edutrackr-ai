@@ -8,6 +8,7 @@ from api.common.utils import has_arg
 app = FastAPI(
     title="Edutrackr AI",
     description="AI Engine for Edutrackr",
+    version="1.0.0"
 )
 app.include_router(router)
 
