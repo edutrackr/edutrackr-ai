@@ -3,6 +3,8 @@ from api.models.attention_level import AttentionLevelRequest, AttentionLevelResp
 from api.models.emotions import EmotionsRequest, EmotionsResponse
 from algorithms.blinking import analyze_blinks
 from algorithms.emotions import analyze_emotions
+from config import AppConfig
+from common.utils import get_path
 
 
 router = APIRouter(prefix="/analytics")
@@ -10,16 +12,16 @@ router = APIRouter(prefix="/analytics")
 
 @router.post("/emotions")
 def emotions(request: EmotionsRequest) -> EmotionsResponse:
-    root = f"video_samples/emotion/{request.path}.mp4"
-    result = analyze_emotions(root)
+    full_path = get_path(AppConfig.STORAGE_PATH, request.path)
+    result = analyze_emotions(full_path)
     response_data = EmotionsResponse(result=result)
     return response_data
 
 
 @router.post("/attentionLevel")
 def blinks(request: AttentionLevelRequest) -> AttentionLevelResponse:
-    root = f"video_samples/attention/{request.path}.mp4"
-    blinks, duration, blink_rate = analyze_blinks(root)
+    full_path = get_path(AppConfig.STORAGE_PATH, request.path)
+    blinks, duration, blink_rate = analyze_blinks(full_path)
     blink_rate_min = (blink_rate)*60
     if blink_rate_min >= 50:
         estado = "Atento"

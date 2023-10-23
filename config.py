@@ -1,10 +1,13 @@
+import os
 from dotenv import load_dotenv
 from common.utils import get_env
+
 
 load_dotenv()
 
 class AppConfig:
     PORT = int(get_env("PORT", 8000))
+    STORAGE_PATH = get_env("STORAGE_PATH", os.path.join(os.getcwd(), "video_samples"))
 
 class AIConfig:
     class Blinking:
