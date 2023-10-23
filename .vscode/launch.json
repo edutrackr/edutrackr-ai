@@ -8,7 +8,7 @@
             "module": "main",
             "args": [
                 "--dev",
-                "--reload"
+                "--watch"
             ],
             "jinja": true,
             "justMyCode": true

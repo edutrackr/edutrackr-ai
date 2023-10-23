@@ -31,7 +31,7 @@ python main.py --dev
 To run the API in development mode with auto-reload, run the following command:
 
 ```bash
-python main.py --dev --reload
+python main.py --dev --watch
 ```
 
 > Reading environment variables from `.env` file and auto-reload are only available in development mode.
