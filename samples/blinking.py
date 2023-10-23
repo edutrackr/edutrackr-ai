@@ -24,7 +24,7 @@ cap = cv2.VideoCapture(0)
 
 # Carga el detector de caras y el predictor de puntos faciales
 detector = dlib.get_frontal_face_detector()
-predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
+predictor = dlib.shape_predictor("resources/blinking/shape_predictor_68_face_landmarks.dat")
 
 # Inicializa el contador de parpadeos
 blink_count = 0

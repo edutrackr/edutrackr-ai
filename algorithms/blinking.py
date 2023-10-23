@@ -58,7 +58,7 @@ def analyze_blinks(
     video_path: str,
     blink_threshold=0.2,
     discarded_frames="auto", # Number of frames to discard in a second
-    shape_predictor_path="resources/shape_predictor_68_face_landmarks.dat"
+    shape_predictor_path="resources/blinking/shape_predictor_68_face_landmarks.dat"
 ):
     # Initialize dlib's face detector and face landmark predictor
     detector = dlib.get_frontal_face_detector()

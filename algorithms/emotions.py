@@ -3,8 +3,8 @@ import cv2
 import imutils
 import numpy as np
 from decimal import Decimal
-from tensorflow.keras.preprocessing.image import img_to_array
-from tensorflow.keras.models import load_model
+from keras.preprocessing.image import img_to_array
+from keras.models import load_model
 from api.models.emotions import EmotionDetail
 
 # Disable tensorflow compilation warnings
@@ -15,12 +15,12 @@ classes = ['angry','disgust','fear','happy','neutral','sad','surprise']
 
 # Cargamos el  modelo de detección de rostros
 
-prototxtPath = "resources/face_detector/deploy.prototxt"
-weightsPath = "resources/face_detector/res10_300x300_ssd_iter_140000.caffemodel"
+prototxtPath = "resources/emotions/face_detector/deploy.prototxt"
+weightsPath = "resources/emotions/face_detector/res10_300x300_ssd_iter_140000.caffemodel"
 faceNet = cv2.dnn.readNet(prototxtPath, weightsPath)
 
 # Carga el detector de clasificación de emociones
-emotionModel = load_model("resources/modelFEC.h5")
+emotionModel = load_model("resources/emotions/modelFEC.h5")
 
 # Se crea la captura de video
 
