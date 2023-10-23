@@ -2,6 +2,7 @@ import dlib
 import cv2
 import numpy as np
 from numpy.linalg import norm
+from config import AIConfig
 
 def __mid_line_distance(p1 ,p2, p3, p4):
     """Compute the euclidean distance between the midpoints of the two sets of points"""
@@ -58,7 +59,7 @@ def analyze_blinks(
     video_path: str,
     blink_threshold=0.2,
     discarded_frames="auto", # Number of frames to discard in a second
-    shape_predictor_path="resources/blinking/shape_predictor_68_face_landmarks.dat"
+    shape_predictor_path=AIConfig.Blinking.SHAPE_PREDICTOR_PATH
 ):
     # Initialize dlib's face detector and face landmark predictor
     detector = dlib.get_frontal_face_detector()

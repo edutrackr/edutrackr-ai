@@ -1,10 +1,10 @@
-from keras.applications.imagenet_utils import preprocess_input
-from keras.preprocessing.image import img_to_array
-from keras.models import load_model
-import numpy as np
-import imutils
 import cv2
 import time
+import imutils
+import numpy as np
+from keras.preprocessing.image import img_to_array
+from keras.models import load_model
+from config import AIConfig
 
 # Variables para calcular FPS
 time_actualframe = 0
@@ -14,12 +14,10 @@ time_prevframe = 0
 classes = ['angry','disgust','fear','happy','neutral','sad','surprise']
 
 # Cargamos el  modelo de detección de rostros
-prototxtPath = "resources/emotions/face_detector/deploy.prototxt"
-weightsPath = "resources/emotions/face_detector/res10_300x300_ssd_iter_140000.caffemodel"
-faceNet = cv2.dnn.readNet(prototxtPath, weightsPath)
+faceNet = cv2.dnn.readNet(AIConfig.Emotions.PROTOTXT_PATH, AIConfig.Emotions.WEIGHTS_PATH)
 
 # Carga el detector de clasificación de emociones
-emotionModel = load_model("resources/emotions/modelFEC.h5")
+emotionModel = load_model(AIConfig.Emotions.CLASSIFICATION_MODEL_PATH)
 
 # Se crea la captura de video
 cam = cv2.VideoCapture(0,cv2.CAP_DSHOW)

@@ -3,6 +3,8 @@ import dlib
 from scipy.spatial import distance
 from imutils import face_utils
 
+from config import AIConfig
+
 def eye_aspect_ratio(eye):
     # Calcula la distancia euclidiana entre los puntos verticales de los ojos
     A = distance.euclidean(eye[1], eye[5])
@@ -24,7 +26,7 @@ cap = cv2.VideoCapture(0)
 
 # Carga el detector de caras y el predictor de puntos faciales
 detector = dlib.get_frontal_face_detector()
-predictor = dlib.shape_predictor("resources/blinking/shape_predictor_68_face_landmarks.dat")
+predictor = dlib.shape_predictor(AIConfig.Blinking.SHAPE_PREDICTOR_PATH)
 
 # Inicializa el contador de parpadeos
 blink_count = 0

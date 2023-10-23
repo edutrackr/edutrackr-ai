@@ -6,6 +6,7 @@ from decimal import Decimal
 from keras.preprocessing.image import img_to_array
 from keras.models import load_model
 from api.models.emotions import EmotionDetail
+from config import AIConfig
 
 # Disable tensorflow compilation warnings
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
@@ -14,17 +15,12 @@ os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 classes = ['angry','disgust','fear','happy','neutral','sad','surprise']
 
 # Cargamos el  modelo de detección de rostros
-
-prototxtPath = "resources/emotions/face_detector/deploy.prototxt"
-weightsPath = "resources/emotions/face_detector/res10_300x300_ssd_iter_140000.caffemodel"
-faceNet = cv2.dnn.readNet(prototxtPath, weightsPath)
+faceNet = cv2.dnn.readNet(AIConfig.Emotions.PROTOTXT_PATH, AIConfig.Emotions.WEIGHTS_PATH)
 
 # Carga el detector de clasificación de emociones
-emotionModel = load_model("resources/emotions/modelFEC.h5")
+emotionModel = load_model(AIConfig.Emotions.CLASSIFICATION_MODEL_PATH)
 
-# Se crea la captura de video
 
-# Toma la imagen, los modelos de detección de rostros y mascarillas 
 # Retorna las localizaciones de los rostros y las predicciones de emociones de cada rostro
 def __predict_emotion(frame,faceNet,emotionModel):
 	# Construye un blob de la imagen
@@ -92,8 +88,5 @@ def analyze_emotions(videopath:str):
 			confidence=Decimal(roundedConfidence)
 		))
 
-	# Muestra el resultado para la emoción más predominante
-	# label = "{}: {:.2f}%".format(classes[np.argmax(pred)], max(angry,disgust,fear,happy,neutral,sad,surprise) * 100)
-		
 	cam.release()
 	return result
