@@ -10,10 +10,10 @@ Before running the project, make sure you have the following installed:
 
 ### Setup
 
+> We recommend using a virtual environment for this project. Use the following command to create a virtual environment: `python -m venv .venv`
+
 1. Clone the repository
 2. Install the required packages using `pip install -r requirements.txt`
-
-> Note: We recommend using a virtual environment for this project.
 
 ## API
 
