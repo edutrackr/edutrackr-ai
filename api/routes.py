@@ -32,7 +32,7 @@ def blinks(request: AttentionLevelRequest) -> AttentionLevelResponse:
     response_data = AttentionLevelResponse(
         blinks=blinks,
         duration=duration,
-        blink_rate_min=blink_rate_min,
+        blink_rate=blink_rate_min,
         estado=estado
     )
     return response_data
