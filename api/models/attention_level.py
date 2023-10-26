@@ -9,4 +9,4 @@ class AttentionLevelResponse(BaseModel):
     blinks: int
     duration: float
     blink_rate: float
-    estado: str
+    status: str

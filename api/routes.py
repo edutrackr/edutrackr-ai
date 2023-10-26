@@ -22,17 +22,19 @@ def blinks(request: AttentionLevelRequest) -> AttentionLevelResponse:
     full_path = get_path(AppConfig.STORAGE_PATH, request.path)
     blinks, duration, blink_rate = analyze_blinks(full_path)
     blink_rate_min = (blink_rate)*60
+
+    # TODO: Normalizar estadoss
     if blink_rate_min >= 50:
-        estado = "Atento"
+        status = "Atento"
     elif 36 <= blink_rate_min < 50:
-        estado = "Cansado"
+        status = "Cansado"
     else:
-        estado = "Muy cansado"
+        status = "Muy cansado"
 
     response_data = AttentionLevelResponse(
         blinks=blinks,
         duration=duration,
         blink_rate=blink_rate_min,
-        estado=estado
+        status=status
     )
     return response_data
