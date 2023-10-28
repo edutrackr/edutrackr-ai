@@ -8,7 +8,7 @@ sys.path.append(app_path)
 
 IS_DEV = has_arg("--dev")
 if IS_DEV:
-    load_dotenv()
+    load_dotenv(override=True)
 
 class AppConfig:
     IS_DEV = IS_DEV
