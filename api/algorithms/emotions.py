@@ -106,6 +106,5 @@ def analyze_emotions(videopath:str):
 			label=label,
 			confidence=Decimal(roundedConfidence)
 		))
-		print(f'{label}, {average:.3f}')	
 	cam.release()
 	return result

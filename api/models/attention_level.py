@@ -1,6 +1,5 @@
-from pydantic import BaseModel,PlainSerializer
-from decimal import Decimal
-from typing_extensions import Annotated
+from pydantic import BaseModel
+from api.common.annotations import DecimalField
 
 
 class AttentionLevelRequest(BaseModel):
@@ -9,12 +8,6 @@ class AttentionLevelRequest(BaseModel):
 
 class AttentionLevelResponse(BaseModel):
     blinks: int
-    duration: Annotated[
-        Decimal,
-        PlainSerializer(lambda x: float(x), return_type=float, when_used='json'),
-    ]
-    blink_rate: Annotated[
-        Decimal,
-        PlainSerializer(lambda x: float(x), return_type=float, when_used='json'),
-    ]
+    duration: DecimalField
+    blink_rate: DecimalField
     status: str

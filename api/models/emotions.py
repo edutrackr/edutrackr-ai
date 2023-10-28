@@ -1,6 +1,5 @@
-from decimal import Decimal
-from typing_extensions import Annotated
-from pydantic import BaseModel, PlainSerializer
+from pydantic import BaseModel
+from api.common.annotations import DecimalField
 
 
 class EmotionsRequest(BaseModel):
@@ -9,10 +8,7 @@ class EmotionsRequest(BaseModel):
 
 class EmotionDetail(BaseModel):
     label: str
-    confidence: Annotated[
-        Decimal,
-        PlainSerializer(lambda x: float(x), return_type=float, when_used='json'),
-    ]
+    confidence: DecimalField
 
 
 class EmotionsResponse(BaseModel):
