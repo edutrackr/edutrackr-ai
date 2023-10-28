@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 from numpy.linalg import norm
 from config import AIConfig
+from decimal import Decimal
 
 def __mid_line_distance(p1 ,p2, p3, p4):
     """Compute the euclidean distance between the midpoints of the two sets of points"""
@@ -133,4 +134,6 @@ def analyze_blinks(
 
     duration = frame_count / fps # In seconds
     blink_rate = blinks / duration # In blinks per second
-    return blinks, duration, blink_rate
+    formated_blink_rate=Decimal(f"{blink_rate:.3f}")
+    formated_duration=Decimal(f"{duration:.2f}")
+    return blinks, formated_duration, formated_blink_rate

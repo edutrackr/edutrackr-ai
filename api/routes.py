@@ -25,11 +25,11 @@ def blinks(request: AttentionLevelRequest) -> AttentionLevelResponse:
 
     # TODO: Normalizar estadoss
     if blink_rate_min >= 50:
-        status = "Atento"
+        status = "focused"
     elif 36 <= blink_rate_min < 50:
-        status = "Cansado"
+        status = "tired"
     else:
-        status = "Muy cansado"
+        status = "very_tired"
 
     response_data = AttentionLevelResponse(
         blinks=blinks,
