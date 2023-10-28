@@ -71,22 +71,41 @@ def __predict_emotion(frame,faceNet,emotionModel):
 def analyze_emotions(videopath:str):
 	cam = cv2.VideoCapture(videopath)
 	# Se toma un frame de la cámara y se redimensiona
-	ret, frame = cam.read()
-	frame = imutils.resize(frame, width=640)
-	(locs, preds) = __predict_emotion(frame,faceNet,emotionModel)
-	
-	if len(preds)==0:
-		return []
+	totals = {}
+	counts = {} 
+	while cam.isOpened():
+		ret, frame = cam.read()
+		if not ret:
+			break
+		frame = imutils.resize(frame, width=640)
+		(locs, preds) = __predict_emotion(frame,faceNet,emotionModel)
+		
+		if len(preds)==0:
+			return []
 
-	pred=preds[0]
+		pred=preds[0]
+		
+		
+		for i in range(0, len(pred)):
+			label = classes[i]
+			confidence = pred[i]
+
+			if label in totals:
+				totals[label] += confidence
+				counts[label] += 1
+			else:
+				totals[label] = confidence
+				counts[label] = 1	
+
 	result = []
-
-	for i in range(0, len(pred)):
-		roundedConfidence = "{:.2f}".format(pred[i])
+	for label, total in totals.items():
+		count = counts[label]
+		average = total / count
+		roundedConfidence = f"{average:.3f}"
 		result.append(EmotionDetail(
-			label=classes[i],
+			label=label,
 			confidence=Decimal(roundedConfidence)
 		))
-
+		print(f'{label}, {average:.3f}')	
 	cam.release()
 	return result
