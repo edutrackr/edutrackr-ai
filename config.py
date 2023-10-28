@@ -3,6 +3,7 @@ import sys
 from dotenv import load_dotenv
 from api.common.utils import get_env, get_path, has_arg
 
+
 app_path = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(app_path)
 

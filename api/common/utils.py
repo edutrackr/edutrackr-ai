@@ -8,6 +8,10 @@ def get_env(key, default=None):
         raise ValueError(f"Environment variable '{key}' not set")
     return value or default
 
+def remove_env(key):
+    if key in os.environ:
+        os.environ.pop(key)
+
 def get_path(base_path, file_path):
     full_path = os.path.join(base_path, file_path)
     if not os.path.exists(full_path):
