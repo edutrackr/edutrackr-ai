@@ -10,12 +10,10 @@ from api.common.constants.emotions import EMOTION_TYPES
 from api.models.emotions import EmotionDetail, EmotionsResponse
 from config import AIConfig
 
+
 # Disable tensorflow compilation warnings
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-# Load the face detector model and the emotion classification model
-__face_model = cv2.dnn.readNet(AIConfig.Emotions.PROTOTXT_PATH, AIConfig.Emotions.WEIGHTS_PATH) # FaceNet
-__emotion_model = load_model(AIConfig.Emotions.CLASSIFICATION_MODEL_PATH)
 
 class EmotionsAnalyzer(BaseVideoAnalyzer[EmotionsResponse]):
     """
@@ -37,10 +35,22 @@ class EmotionsAnalyzer(BaseVideoAnalyzer[EmotionsResponse]):
     The number of predictions for each emotion.
     """
 
+    __face_model: any
+    """
+    The face detector model (based on FaceNet).
+    """
+
+    __emotion_model: any
+    """
+    The emotion classification model.
+    """
+
 
     def __init__(self, settings: EmotionsSettings):
         super().__init__(settings.video)
         self._settings = settings
+        self.__face_model = cv2.dnn.readNet(AIConfig.Emotions.PROTOTXT_PATH, AIConfig.Emotions.WEIGHTS_PATH)
+        self.__emotion_model = load_model(AIConfig.Emotions.CLASSIFICATION_MODEL_PATH)
 
 
     def _reset_state(self) -> None:
@@ -72,19 +82,19 @@ class EmotionsAnalyzer(BaseVideoAnalyzer[EmotionsResponse]):
     
     
     def _get_final_result(self) -> EmotionsResponse:
-        # Calculate the average confidence for each emotion
-        result = []
+        emotions_detail = []
         for label, total in self._total_confidence_by_emotion.items():
+            # Calculate the average confidence
             count = self._prediction_count_by_emotion[label]
             average = total / count
-            roundedConfidence = f"{average:.3f}"
-            result.append(EmotionDetail(
+            emotions_detail.append(EmotionDetail(
                 label=label,
-                confidence=Decimal(roundedConfidence)
+                confidence=Decimal(f"{average:.3f}")
             ))
-        return EmotionsResponse(
-            emotions=result
+        result = EmotionsResponse(
+            result=emotions_detail
         )
+        return result
 
 
     def __predict_emotion(self, frame, max_faces = 1): #TODO: max_faces
@@ -96,8 +106,8 @@ class EmotionsAnalyzer(BaseVideoAnalyzer[EmotionsResponse]):
         blob = cv2.dnn.blobFromImage(frame, 1.0, (224, 224), (104.0, 177.0, 123.0))
         
         # Detect faces in the frame
-        __face_model.setInput(blob)
-        detections = __face_model.forward()
+        self.__face_model.setInput(blob)
+        detections = self.__face_model.forward()
 
         # Predict emotions for each face detected
         predictions = []
@@ -122,7 +132,7 @@ class EmotionsAnalyzer(BaseVideoAnalyzer[EmotionsResponse]):
                 face_array = np.expand_dims(face_array, axis=0)
 
                 # Predict the emotion
-                prediction = __emotion_model.predict(face_array, verbose=0)
+                prediction = self.__emotion_model.predict(face_array, verbose=0)
                 predictions.append(prediction[0])
 
         return predictions

@@ -1,7 +1,4 @@
-from enum import Enum
-
-
-class AttentionLevelStatus(Enum):
+class AttentionLevelStatus:
     HIGH = "high" # Focused
     MEDIUM = "medium" # Tired
     LOW = "low" # Very tired

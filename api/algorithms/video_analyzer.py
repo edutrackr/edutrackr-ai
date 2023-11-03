@@ -46,7 +46,7 @@ class BaseVideoAnalyzer(Generic[TResult]):
         if self._video_metadata is None:
             raise Exception("Unable to get video metadata")
 
-        discarded_frames = self._calculate_discarded_frames(self._video_metadata)
+        discarded_frames = self._calculate_discarded_frames()
 
         skipped_frames = 0
         self._reset_state()

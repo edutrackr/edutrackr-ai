@@ -10,10 +10,6 @@ from config import AIConfig
 from decimal import Decimal
 
 
-# Initialize dlib's face detector and face landmark predictor
-__face_detector = dlib.get_frontal_face_detector()
-__face_predictor = dlib.shape_predictor(AIConfig.Blinking.SHAPE_PREDICTOR_PATH)
-
 class AttentionLevelAnalyzer(BaseVideoAnalyzer[AttentionLevelResponse]):
     """
     Analyzer for the attention level algorithm.
@@ -29,14 +25,32 @@ class AttentionLevelAnalyzer(BaseVideoAnalyzer[AttentionLevelResponse]):
     The number of blinks.
     """
 
+    _eye_closed: bool
+    """
+    Flag indicating if the eye is closed.
+    """
+
+    __face_detector: any
+    """
+    Dlib's face detector.
+    """
+
+    __face_predictor: any
+    """
+    Dlib's face landmark predictor.
+    """
+
 
     def __init__(self, settings: AttentionLevelSettings):
         super().__init__(settings.video)
         self._settings = settings
+        self.__face_detector = dlib.get_frontal_face_detector()
+        self.__face_predictor = dlib.shape_predictor(AIConfig.Blinking.SHAPE_PREDICTOR_PATH)
 
 
     def _reset_state(self) -> None:
         self._blinks_count = 0
+        self._eye_closed = False
 
 
     def _analyze_frame(self, frame: np.ndarray) -> None:
@@ -44,28 +58,27 @@ class AttentionLevelAnalyzer(BaseVideoAnalyzer[AttentionLevelResponse]):
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         # Detect faces in the grayscale frame
-        rects = __face_detector(gray, 0)
+        rects = self.__face_detector(gray, 0)
 
         # Loop over the face detections
         # TODO: Algorithm is using all the available faces
         for rect in rects:
-            landmarks = __face_predictor(gray, rect)
+            landmarks = self.__face_predictor(gray, rect)
 
             # Use the coordinates of each eye to compute the eye aspect ratio.
             left_aspect_ratio = self.__eye_aspect_ratio(landmarks, range(42, 48))
             right_aspect_ratio = self.__eye_aspect_ratio(landmarks, range(36, 42))
             ear = (left_aspect_ratio + right_aspect_ratio) / 2.0 # Eye Aspect Ratio
 
-            eye_closed = False
             # If the eye aspect ratio is below the blink threshold, set the eye_closed flag to True.
             if ear < self._settings.eye_ratio_threshold:
-                eye_closed = True
+                self._eye_closed = True
 
             # If the eye aspect ratio is above the blink threshold and 
             # the eye_closed flag is True, increment the number of blinks.
-            elif ear >= self._settings.eye_ratio_threshold and eye_closed:
-                self._blinks_countblinks += 1
-                eye_closed = False
+            elif ear >= self._settings.eye_ratio_threshold and self._eye_closed:
+                self._blinks_count += 1
+                self._eye_closed = False
 
 
 
