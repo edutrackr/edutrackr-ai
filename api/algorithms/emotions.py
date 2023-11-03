@@ -16,7 +16,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 faceModel = cv2.dnn.readNet(AIConfig.Emotions.PROTOTXT_PATH, AIConfig.Emotions.WEIGHTS_PATH) # FaceNet
 emotionModel = load_model(AIConfig.Emotions.CLASSIFICATION_MODEL_PATH)
 
-def __predict_emotion(frame, max_faces = 1):
+def __predict_emotion(frame, max_faces = 1): #TODO: max_faces
     """
     Detect faces in the frame and predict the emotion of each face
     """
@@ -55,7 +55,7 @@ def __predict_emotion(frame, max_faces = 1):
 
     return predictions
 
-def analyze_emotions(video_path: str):
+def analyze_emotions(video_path: str) -> list[EmotionDetail]:
     # Initialize the video capture object
     video = cv2.VideoCapture(video_path)
     
