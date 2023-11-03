@@ -3,7 +3,6 @@ Utility functions for video processing.
 """
 
 import ffmpeg
-from config import AIConfig
 from api.common.constants.video import OPTIMAL_SIZE_BY_ASPECT_RATIO, VideoAspectRatio
 
 

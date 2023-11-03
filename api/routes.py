@@ -1,7 +1,7 @@
 from fastapi import APIRouter
+from config import AppConfig
 from api.auth import APIKeyValidation
 from api.services.analytics import analyze_emotions, analyze_attention_level
-from config import AppConfig
 from api.common.utils.os import get_path
 from api.models.attention_level import AttentionLevelRequest, AttentionLevelResponse
 from api.models.emotions import EmotionsRequest, EmotionsResponse

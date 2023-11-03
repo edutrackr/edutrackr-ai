@@ -7,7 +7,6 @@ from keras.models import load_model
 from api.algorithms.video_analyzer import BaseVideoAnalyzer
 from api.algorithms.settings.emotions import EmotionsSettings
 from api.common.constants.emotions import EMOTION_TYPES
-from api.common.utils.video import get_video_metadata
 from api.models.emotions import EmotionDetail, EmotionsResponse
 from config import AIConfig
 
