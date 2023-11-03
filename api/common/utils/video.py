@@ -89,7 +89,7 @@ class VideoMetadata:
 
 def get_video_metadata(
     path: str, 
-    resolution: str = AIConfig.VideoProcessing.DEFAULT_VIDEO_RESOLUTION
+    resolution: str
 ) -> VideoMetadata | None:
     """
     Get the metadata of a video using FFmpeg.
