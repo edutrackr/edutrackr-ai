@@ -18,6 +18,11 @@ class AppConfig:
     PORT = int(get_env("PORT", 8000))
     STORAGE_PATH = get_env("STORAGE_PATH", os.path.join(os.getcwd(), "tests/videos"))
 
+    class Swagger:
+        TITLE = "Edutrackr AI"
+        DESCRIPTION = "AI Engine for Edutrackr"
+        VERSION = "1.0.0"
+
     class Auth:
         API_KEY = get_env("API_KEY")
         API_KEY_NAME = "api_key"

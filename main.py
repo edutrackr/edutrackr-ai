@@ -7,11 +7,12 @@ from api.common.utils.runtime import has_arg
 
 
 app = FastAPI(
-    title="Edutrackr AI",
-    description="AI Engine for Edutrackr",
-    version="1.0.0"
+    title=AppConfig.Swagger.TITLE,
+    description=AppConfig.Swagger.DESCRIPTION,
+    version=AppConfig.Swagger.VERSION,
 )
 app.include_router(router)
+
 
 if __name__ == "__main__":
     reload = AppConfig.IS_DEV and has_arg(RuntimeArgs.WATCH_MODE)
