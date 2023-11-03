@@ -5,6 +5,7 @@ import numpy as np
 from decimal import Decimal
 from keras.preprocessing.image import img_to_array
 from keras.models import load_model
+from api.algorithms.tools import new_video_size
 from api.models.emotions import EmotionDetail
 from config import AIConfig
 
@@ -38,10 +39,9 @@ def __predict_emotion(frame,faceNet,emotionModel):
 	# Recorre cada una de las detecciones
 	for i in range(0, detections.shape[2]):
 		
-		# Fija un umbral para determinar que la detección es confiable
+		# Fija un umbral para determinar que la detección de rostro es confiable
 		# Tomando la probabilidad asociada en la deteccion
-
-		if detections[0, 0, i, 2] > 0.4:
+		if detections[0, 0, i, 2] > 0.4: # TODO: Use from configuration
 			# Toma el bounding box de la detección escalado
 			# de acuerdo a las dimensiones de la imagen
 			box = detections[0, 0, i, 3:7] * np.array([frame.shape[1], frame.shape[0], frame.shape[1], frame.shape[0]])
@@ -68,23 +68,36 @@ def __predict_emotion(frame,faceNet,emotionModel):
 
 	return (locs,preds)
 
-def analyze_emotions(videopath:str):
-	cam = cv2.VideoCapture(videopath)
-	# Se toma un frame de la cámara y se redimensiona
-	totals = {}
-	counts = {} 
-	while cam.isOpened():
-		ret, frame = cam.read()
-		if not ret:
-			break
-		frame = imutils.resize(frame, width=640)
-		(locs, preds) = __predict_emotion(frame,faceNet,emotionModel)
-		
-		if len(preds)==0:
-			return []
+def analyze_emotions(videopath: str):
+    # Iniatialize the video capture object
+    video = cv2.VideoCapture(videopath)
+    
+    # Get the video properties
+	new_width, new_height = new_video_size(video)
 
-		pred=preds[0]
+	totals = {}
+	counts = {}
+	
+	while video.isOpened():
+
+        # Read each frame from the video
+        is_processing, frame = video.read()
+
+        if not is_processing:
+            break
+
+        # Resize the frame
+		frame = cv2.resize(frame, (new_width, new_height))
+
+        # Detect faces and predict emotions
+		locs, preds = __predict_emotion(frame, faceNet, emotionModel)
 		
+        # If not predictions were made, continue
+		if len(preds) == 0:
+			continue
+        
+        # Take the first prediction
+		pred=preds[0]
 		
 		for i in range(0, len(pred)):
 			label = classes[i]
@@ -106,5 +119,5 @@ def analyze_emotions(videopath:str):
 			label=label,
 			confidence=Decimal(roundedConfidence)
 		))
-	cam.release()
+	video.release()
 	return result
