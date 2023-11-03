@@ -1,6 +1,5 @@
 import os
 import cv2
-import imutils
 import numpy as np
 from decimal import Decimal
 from keras.preprocessing.image import img_to_array
@@ -10,26 +9,25 @@ from api.models.emotions import EmotionDetail
 from config import AIConfig
 
 # Disable tensorflow compilation warnings
-os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-# Tipos de emociones del detector
+# Emotion types
 classes = ['angry','disgust','fear','happy','neutral','sad','surprise']
 
-# Cargamos el  modelo de detección de rostros
-faceNet = cv2.dnn.readNet(AIConfig.Emotions.PROTOTXT_PATH, AIConfig.Emotions.WEIGHTS_PATH)
-
-# Carga el detector de clasificación de emociones
+# Load the face detector model and the emotion classification model
+faceModel = cv2.dnn.readNet(AIConfig.Emotions.PROTOTXT_PATH, AIConfig.Emotions.WEIGHTS_PATH) # FaceNet
 emotionModel = load_model(AIConfig.Emotions.CLASSIFICATION_MODEL_PATH)
 
-
-# Retorna las localizaciones de los rostros y las predicciones de emociones de cada rostro
-def __predict_emotion(frame,faceNet,emotionModel):
+def __predict_emotion(frame): # TODO: add max faces parameter
+    """
+    Detect faces in the frame and predict the emotion of each face
+    """
     # Construye un blob de la imagen
     blob = cv2.dnn.blobFromImage(frame, 1.0, (224, 224),(104.0, 177.0, 123.0))
     
     # Realiza las detecciones de rostros a partir de la imagen
-    faceNet.setInput(blob)
-    detections = faceNet.forward()
+    faceModel.setInput(blob)
+    detections = faceModel.forward()
 
     # Listas para guardar rostros, ubicaciones y predicciones
     faces = []
@@ -66,7 +64,7 @@ def __predict_emotion(frame,faceNet,emotionModel):
             pred = emotionModel.predict(face2, verbose=0)
             preds.append(pred[0])
 
-    return (locs,preds)
+    return locs, preds # TODO: remove return of locs
 
 def analyze_emotions(videopath: str):
     # Iniatialize the video capture object
@@ -77,7 +75,6 @@ def analyze_emotions(videopath: str):
 
     totals = {}
     counts = {}
-    
     while video.isOpened():
 
         # Read each frame from the video
@@ -90,14 +87,14 @@ def analyze_emotions(videopath: str):
         frame = cv2.resize(frame, (new_width, new_height))
 
         # Detect faces and predict emotions
-        locs, preds = __predict_emotion(frame, faceNet, emotionModel)
+        predictions = __predict_emotion(frame)
         
-        # If not predictions were made, continue
-        if len(preds) == 0:
+        # Skip if no faces were detected
+        if len(predictions) == 0:
             continue
         
-        # Take the first prediction
-        pred=preds[0]
+        # Take the first prediction (only one face)
+        pred=predictions[0]
         
         for i in range(0, len(pred)):
             label = classes[i]
@@ -110,6 +107,9 @@ def analyze_emotions(videopath: str):
                 totals[label] = confidence
                 counts[label] = 1    
 
+    video.release()
+
+    # Calculate the average confidence for each emotion
     result = []
     for label, total in totals.items():
         count = counts[label]
@@ -119,5 +119,4 @@ def analyze_emotions(videopath: str):
             label=label,
             confidence=Decimal(roundedConfidence)
         ))
-    video.release()
     return result

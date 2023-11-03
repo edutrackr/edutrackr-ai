@@ -6,6 +6,10 @@ from api.algorithms.tools import new_video_size
 from config import AIConfig
 from decimal import Decimal
 
+# Initialize dlib's face detector and face landmark predictor
+detector = dlib.get_frontal_face_detector()
+predictor = dlib.shape_predictor(AIConfig.Blinking.SHAPE_PREDICTOR_PATH)
+
 def __mid_line_distance(p1 ,p2, p3, p4):
     """Compute the euclidean distance between the midpoints of the two sets of points"""
     p5 = np.array([int((p1[0] + p2[0])/2), int((p1[1] + p2[1])/2)])
@@ -32,13 +36,8 @@ def __eye_aspect_ratio(landmarks, eye_range):
 def analyze_blinks(
     video_path: str,
     blink_threshold=0.2,
-    discarded_frames="auto", # Number of frames to discard in a second
-    shape_predictor_path=AIConfig.Blinking.SHAPE_PREDICTOR_PATH
+    discarded_frames="auto" # Number of frames to discard in a second
 ):
-    # Initialize dlib's face detector and face landmark predictor
-    detector = dlib.get_frontal_face_detector()
-    predictor = dlib.shape_predictor(shape_predictor_path)
-
     # Iniatialize the video capture object
     video = cv2.VideoCapture(video_path)
 
