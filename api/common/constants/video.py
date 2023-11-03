@@ -11,7 +11,6 @@ class VideoAspectRatio:
     OTHER = "other"
 
 
-# Configuration for the optimal size of the video
 OPTIMAL_SIZE_BY_ASPECT_RATIO: dict[str, dict[str, tuple[int, int]]] = {
     VideoResolution.MEDIUM: {
         VideoAspectRatio._4_3: (600, 450),
@@ -26,3 +25,13 @@ OPTIMAL_SIZE_BY_ASPECT_RATIO: dict[str, dict[str, tuple[int, int]]] = {
         VideoAspectRatio.OTHER: (480, 360)
     }
 }
+"""
+Configuration for the optimal size of the video based on the aspect ratioa and the resolution.
+"""
+
+
+DEFAULT_DISCARDED_FRAMES_VALUE = "auto"
+"""The default value for the number of frames to discard in a second."""
+
+DEFAULT_DISCARDED_FRAMES_RATE = 0.1
+"""The sample rate should not be higher than 10% of FPS to avoid loosing analysis quality."""
