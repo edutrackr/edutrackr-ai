@@ -2,6 +2,7 @@ import dlib
 import cv2
 import numpy as np
 from numpy.linalg import norm
+from api.algorithms.tools import new_video_size
 from config import AIConfig
 from decimal import Decimal
 
@@ -12,7 +13,11 @@ def __mid_line_distance(p1 ,p2, p3, p4):
 
     return norm(p5 - p6)
 
-def __aspect_ratio(landmarks, eye_range):
+def __eye_aspect_ratio(landmarks, eye_range):
+    """
+    Compute the eye aspect ratio (EAR) given the eye landmarks.
+    """
+
     # Get the eye coordinates
     eye = np.array(
         [np.array([landmarks.part(i).x, landmarks.part(i).y]) for i in eye_range]
@@ -23,38 +28,6 @@ def __aspect_ratio(landmarks, eye_range):
     # Use the euclidean distance to compute the aspect ratio
     ear = A / B
     return ear
-
-def __new_size(width: int, height: int):
-    # Determine the aspect ratio of the frame
-    aspect_ratio = width / height
-
-    # Set the new width and height
-    if aspect_ratio == 4/3:
-        # Medium resolution
-        # new_width = 600
-        # new_height = 450
-        
-        # Low resolution
-        new_width = 480
-        new_height = 360
-    elif aspect_ratio == 16/9:
-        # Medium resolution
-        # new_width = 640
-        # new_height = 360
-
-        # Low resolution
-        new_width = 480
-        new_height = 270
-    else:
-        # Medium resolution
-        # new_width = 600
-        # new_height = 450
-
-        # Low resolution
-        new_width = 480
-        new_height = 360
-
-    return new_width, new_height
 
 def analyze_blinks(
     video_path: str,
@@ -72,12 +45,7 @@ def analyze_blinks(
     # Get the video properties
     fps = int(video.get(cv2.CAP_PROP_FPS))
     frame_count = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
-    width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
-
-    # Reduce the resolution of the frames
-    height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    new_width, new_height = __new_size(width, height)
-
+    new_width, new_height = new_video_size(video)
 
     # Validate the number of frames to discard
     if discarded_frames == "auto":
@@ -104,7 +72,6 @@ def analyze_blinks(
             sample_count = 0
 
         # Resize the frame and convert it to grayscale
-        #frame = cv2.resize(frame, (600, 450))
         frame = cv2.resize(frame, (new_width, new_height))
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
@@ -116,8 +83,8 @@ def analyze_blinks(
             landmarks = predictor(gray, rect)
 
             # Use the coordinates of each eye to compute the eye aspect ratio.
-            left_aspect_ratio = __aspect_ratio(landmarks, range(42, 48))
-            right_aspect_ratio = __aspect_ratio(landmarks, range(36, 42))
+            left_aspect_ratio = __eye_aspect_ratio(landmarks, range(42, 48))
+            right_aspect_ratio = __eye_aspect_ratio(landmarks, range(36, 42))
             ear = (left_aspect_ratio + right_aspect_ratio) / 2.0 # Eye Aspect Ratio
 
             # If the eye aspect ratio is below the blink threshold, set the eye_closed flag to True.
