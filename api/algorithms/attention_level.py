@@ -10,6 +10,17 @@ from config import AIConfig
 from decimal import Decimal
 
 
+face_detector = dlib.get_frontal_face_detector() # type: ignore
+"""
+Dlib's face detector.
+"""
+
+face_predictor = dlib.shape_predictor(AIConfig.Blinking.SHAPE_PREDICTOR_PATH) # type: ignore
+"""
+Dlib's face landmark predictor.
+"""
+
+
 class AttentionLevelAnalyzer(BaseVideoAnalyzer[AttentionLevelResponse]):
     """
     Analyzer for the attention level algorithm.
@@ -30,22 +41,10 @@ class AttentionLevelAnalyzer(BaseVideoAnalyzer[AttentionLevelResponse]):
     Flag indicating if the eye is closed.
     """
 
-    __face_detector: any
-    """
-    Dlib's face detector.
-    """
-
-    __face_predictor: any
-    """
-    Dlib's face landmark predictor.
-    """
-
 
     def __init__(self, settings: AttentionLevelSettings):
         super().__init__(settings.video)
         self._settings = settings
-        self.__face_detector = dlib.get_frontal_face_detector()
-        self.__face_predictor = dlib.shape_predictor(AIConfig.Blinking.SHAPE_PREDICTOR_PATH)
 
 
     def _reset_state(self) -> None:
@@ -58,12 +57,12 @@ class AttentionLevelAnalyzer(BaseVideoAnalyzer[AttentionLevelResponse]):
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         # Detect faces in the grayscale frame
-        rects = self.__face_detector(gray, 0)
+        rects = face_detector(gray, 0)
 
         # Loop over the face detections
         # TODO: Algorithm is using all the available faces
         for rect in rects:
-            landmarks = self.__face_predictor(gray, rect)
+            landmarks = face_predictor(gray, rect)
 
             # Use the coordinates of each eye to compute the eye aspect ratio.
             left_aspect_ratio = self.__eye_aspect_ratio(landmarks, range(42, 48))

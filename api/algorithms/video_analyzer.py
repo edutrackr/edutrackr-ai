@@ -41,10 +41,11 @@ class BaseVideoAnalyzer(Generic[TResult]):
         # Initialize the video capture object
         video = cv2.VideoCapture(video_path)
 
-        # Get the video properties
-        self._video_metadata = get_video_metadata(video_path, self._video_settings.video_resolution)
-        if self._video_metadata is None:
+        # Get the video metadata
+        video_metadata = get_video_metadata(video_path, self._video_settings.video_resolution)
+        if video_metadata is None:
             raise Exception("Unable to get video metadata")
+        self._video_metadata = video_metadata
 
         discarded_frames = self._calculate_discarded_frames()
 
