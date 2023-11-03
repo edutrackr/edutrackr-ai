@@ -6,7 +6,8 @@
 
 Before running the project, make sure you have the following installed:
 - [Python](https://www.python.org/downloads/)
-- [CMake](https://cmake.org/download/) (this is required for installing `dlib`)
+- [CMake](https://cmake.org/download/) (required for installing `dlib`)
+- [FFmpeg](https://ffmpeg.org/download.html) (required for installing `ffmpeg-python`)
 
 ### Setup
 
@@ -46,11 +47,20 @@ python main.py
 
 > To open the API documentation, go to `http://<base_url>/docs`.
 
+## Samples
+
+To run any AI sample, run the following command:
+
+```bash
+python <sample_name>.py --dev
+```
+
+> To run the sample in development mode, add the `--dev` flag in order to read the environment variables from the `.env` file.
+
 ## Project Structure
 
 The project is divided into the following sub-directories:
-- `algorithms`: Contains the logic for the AI algorithms used in the project.
 - `api`: Contains the logic for the Web API.
 - `resources`: Contains the static resources used in the project.
-- `samples`: Contains the sample code for testing the models using the webcam.
-- `video_samples`: Contains the sample videos for testing the models.
+- `samples`: Contains the sample code for testing the AI models.
+- `tests`: Contains the unit tests for the project.
