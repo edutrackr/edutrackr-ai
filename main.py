@@ -1,7 +1,7 @@
 import uvicorn
 from fastapi import FastAPI
 from config import AppConfig
-from api.routes import router
+from api.routes.app import router
 from api.common.constants.runtime import RuntimeArgs
 from api.common.utils.runtime import has_arg
 
