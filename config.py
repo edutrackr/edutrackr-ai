@@ -1,13 +1,16 @@
 import os
 import sys
 from dotenv import load_dotenv
-from api.common.utils import get_env, get_path, has_arg
+from api.common.constants.runtime import RuntimeArgs
+from api.common.constants.video import VideoResolution
+from api.common.utils.os import get_env, get_path
+from api.common.utils.runtime import has_arg
 
 
 app_path = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(app_path)
 
-IS_DEV = has_arg("--dev")
+IS_DEV = has_arg(RuntimeArgs.DEV_MODE)
 if IS_DEV:
     load_dotenv(override=True)
 
@@ -28,3 +31,11 @@ class AIConfig:
         PROTOTXT_PATH = get_path(app_path, "resources/emotions/face_detector/deploy.prototxt")
         WEIGHTS_PATH = get_path(app_path, "resources/emotions/face_detector/res10_300x300_ssd_iter_140000.caffemodel")
         CLASSIFICATION_MODEL_PATH = get_path(app_path, "resources/emotions/modelFEC.h5")
+
+    class VideoProcessing:
+        FACE_DETECTION_CONFIDENCE_THRESHOLD = 0.4
+        """
+        Minimum confidence threshold for face detection.
+        """
+
+        DEFAULT_VIDEO_RESOLUTION = VideoResolution.LOW

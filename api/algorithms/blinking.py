@@ -2,7 +2,7 @@ import dlib
 import cv2
 import numpy as np
 from numpy.linalg import norm
-from api.algorithms.tools import new_video_size
+from api.common.utils.video import get_video_metadata
 from config import AIConfig
 from decimal import Decimal
 
@@ -42,14 +42,13 @@ def analyze_blinks(
     video = cv2.VideoCapture(video_path)
 
     # Get the video properties
-    fps = int(video.get(cv2.CAP_PROP_FPS))
-    frame_count = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
-    new_width, new_height = new_video_size(video)
+    video_metadata = get_video_metadata(video_path)
 
     # Validate the number of frames to discard
+    # TODO: Add to constants
     if discarded_frames == "auto":
-        discaded_frames_rate = 0.1 # Sample rate should not be higher than 10% of FPS to avoid loosing analysis quality
-        discarded_frames = int(fps * discaded_frames_rate)
+        discarded_frames_rate = 0.1 # Sample rate should not be higher than 10% of FPS to avoid loosing analysis quality
+        discarded_frames = int(video_metadata.avg_fps * discarded_frames_rate)
         #print(discarded_frames)
 
     eye_closed = False
@@ -71,7 +70,7 @@ def analyze_blinks(
             sample_count = 0
 
         # Resize the frame and convert it to grayscale
-        frame = cv2.resize(frame, (new_width, new_height))
+        frame = cv2.resize(frame, (video_metadata.optimal_width, video_metadata.optimal_height))
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         # Detect faces in the grayscale frame
@@ -98,8 +97,7 @@ def analyze_blinks(
 
     video.release()
 
-    duration = frame_count / fps # In seconds
-    blink_rate = blinks / duration # In blinks per second
+    blink_rate = blinks / video_metadata.duration # In blinks per second
     formated_blink_rate=Decimal(f"{blink_rate:.3f}")
-    formated_duration=Decimal(f"{duration:.2f}")
+    formated_duration=Decimal(f"{video_metadata.duration:.2f}")
     return blinks, formated_duration, formated_blink_rate

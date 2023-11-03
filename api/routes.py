@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from api.auth import APIKeyValidation
 from config import AppConfig
-from api.common.utils import get_path
+from api.common.utils.os import get_path
 from api.models.attention_level import AttentionLevelRequest, AttentionLevelResponse
 from api.models.emotions import EmotionsRequest, EmotionsResponse
 from api.algorithms.blinking import analyze_blinks
@@ -23,7 +23,7 @@ def blinks(request: AttentionLevelRequest) -> AttentionLevelResponse:
     blinks, duration, blink_rate = analyze_blinks(full_path)
     blink_rate_min = (blink_rate)*60
 
-    # TODO: Normalizar estadoss
+    # TODO: Normalizar estados
     if blink_rate_min >= 50:
         status = "focused"
     elif 36 <= blink_rate_min < 50:
