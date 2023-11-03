@@ -2,7 +2,7 @@ import dlib
 import cv2
 import numpy as np
 from numpy.linalg import norm
-from api.algorithms.base import BaseVideoAnalyzer
+from api.algorithms.video_analyzer import BaseVideoAnalyzer
 from api.algorithms.settings.attention_level import AttentionLevelSettings
 from api.common.constants.attention_level import AttentionLevelStatus
 from api.models.attention_level import AttentionLevelResponse

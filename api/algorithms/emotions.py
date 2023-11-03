@@ -4,7 +4,7 @@ import numpy as np
 from decimal import Decimal
 from keras.preprocessing.image import img_to_array
 from keras.models import load_model
-from api.algorithms.base import BaseVideoAnalyzer
+from api.algorithms.video_analyzer import BaseVideoAnalyzer
 from api.algorithms.settings.emotions import EmotionsSettings
 from api.common.constants.emotions import EMOTION_TYPES
 from api.common.utils.video import get_video_metadata

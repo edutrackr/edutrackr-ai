@@ -1,4 +1,4 @@
-from api.algorithms.blinking import AttentionLevelAnalyzer
+from api.algorithms.attention_level import AttentionLevelAnalyzer
 from api.algorithms.emotions import EmotionsAnalyzer
 from api.algorithms.settings.attention_level import AttentionLevelSettings
 from api.algorithms.settings.emotions import EmotionsSettings

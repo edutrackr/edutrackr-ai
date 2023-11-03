@@ -10,7 +10,6 @@ from api.common.constants.video import DEFAULT_DISCARDED_FRAMES_RATE, DEFAULT_DI
 TResult = TypeVar("TResult")
 
 class BaseVideoAnalyzer(Generic[TResult]):
-
     """
     Base class for AI video analyzers.
     """
