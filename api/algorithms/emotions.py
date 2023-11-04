@@ -57,19 +57,16 @@ class EmotionsAnalyzer(BaseVideoAnalyzer[EmotionsResponse]):
 
 
     def _analyze_frame(self, frame: np.ndarray) -> None:
-        # Detect faces and predict emotions
-        predictions = self.__predict_emotion(frame)
+        # Predict emotion
+        prediction = self.__predict_emotion(frame)
         
-        # Skip if no faces were detected
-        if len(predictions) == 0:
+        # Skip if no prediction was made
+        if prediction is None:
             return
         
-        # Take the first prediction (only one face)
-        pred = predictions[0]
-        
-        for i in range(0, len(pred)):
+        for i in range(0, len(prediction)):
             label = EMOTION_TYPES[i]
-            confidence = pred[i]
+            confidence = prediction[i]
 
             if label in self._total_confidence_by_emotion:
                 self._total_confidence_by_emotion[label] += confidence
@@ -95,7 +92,7 @@ class EmotionsAnalyzer(BaseVideoAnalyzer[EmotionsResponse]):
         return result
 
 
-    def __predict_emotion(self, frame, max_faces = 1): #TODO: max_faces
+    def __predict_emotion(self, frame: np.ndarray) -> np.ndarray | None:
         """
         Detect faces in the frame and predict the emotion of each face.
         """
@@ -107,30 +104,43 @@ class EmotionsAnalyzer(BaseVideoAnalyzer[EmotionsResponse]):
         face_model.setInput(blob)
         detections = face_model.forward()
 
-        # Predict emotions for each face detected
-        predictions = []
-        for i in range(0, detections.shape[2]): # TODO: Replace with max_faces
+        # Skip if no faces were detected
+        total_detected_faces = detections.shape[2]
+        if total_detected_faces == 0:
+            return None
+
+        # Take the first face
+        first_face = detections[0, 0, 0]
+
+        # Check if the confidence of the first detection is enough
+        confidence = first_face[2] # Face detection confidence/probability
+        if confidence < self._settings.face_detection_confidence:
+            return None
+        
+        # Extract the face from the frame
+        face_array = self.__extract_face(frame, first_face)
+
+        # Predict the emotion
+        prediction = emotion_model.predict(face_array, verbose=0)[0] # The prediction is a matrix (only take the first row)
+        return prediction
+
+
+    def __extract_face(self, frame: np.ndarray, face: np.ndarray) -> np.ndarray:
+        """
+        Extracts the face from the frame.
+        """
+        # Use the bounding box of the detection scaled to the dimensions of the image
+        box = face[3:7] * np.array([frame.shape[1], frame.shape[0], frame.shape[1], frame.shape[0]])
+        (Xi, Yi, Xf, Yf) = box.astype("int")
+
+        # Normalize the bounding box coordinates
+        if Xi < 0: Xi = 0
+        if Yi < 0: Yi = 0
             
-            confidence = detections[0, 0, i, 2] # Face detection probability
-            if confidence >= self._settings.face_detection_confidence:
-                
-                # Use the bounding box of the detection scaled to the dimensions of the image
-                box = detections[0, 0, i, 3:7] * np.array([frame.shape[1], frame.shape[0], frame.shape[1], frame.shape[0]])
-                (Xi, Yi, Xf, Yf) = box.astype("int")
-
-                # Normalize the bounding box coordinates
-                if Xi < 0: Xi = 0
-                if Yi < 0: Yi = 0
-                
-                # Extract the face from the frame, convert it to grayscale and resize it to 48x48
-                face = frame[Yi:Yf, Xi:Xf]
-                face = cv2.cvtColor(face, cv2.COLOR_BGR2GRAY)
-                face = cv2.resize(face, (48, 48))
-                face_array = img_to_array(face)
-                face_array = np.expand_dims(face_array, axis=0)
-
-                # Predict the emotion
-                prediction = emotion_model.predict(face_array, verbose=0)
-                predictions.append(prediction[0])
-
-        return predictions
+        # Extract the face from the frame, convert it to grayscale and resize it to 48x48
+        extracted_face = frame[Yi:Yf, Xi:Xf]
+        extracted_face = cv2.cvtColor(extracted_face, cv2.COLOR_BGR2GRAY)
+        extracted_face = cv2.resize(extracted_face, (48, 48))
+        face_array = img_to_array(extracted_face)
+        face_array = np.expand_dims(face_array, axis=0)
+        return face_array
