@@ -1,13 +1,13 @@
 import dlib
 import cv2
 import numpy as np
-from numpy.linalg import norm
+from decimal import Decimal
+from config import AIConfig
+from api.algorithms.eye_aspect_ratio import optimized_ear, original_ear
 from api.algorithms.video_analyzer import BaseVideoAnalyzer
 from api.algorithms.settings.attention_level import AttentionLevelSettings
-from api.common.constants.attention_level import AttentionLevelStatus
+from api.common.constants.attention_level import AttentionLevelStatus, FacialLandmarksIndexes
 from api.models.attention_level import AttentionLevelResponse
-from config import AIConfig
-from decimal import Decimal
 
 
 face_detector = dlib.get_frontal_face_detector() # type: ignore
@@ -57,28 +57,31 @@ class AttentionLevelAnalyzer(BaseVideoAnalyzer[AttentionLevelResponse]):
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         # Detect faces in the grayscale frame
-        rects = face_detector(gray, 0)
+        faces = face_detector(gray, 0)
+        if len(faces) == 0:
+            return
+        
+        # Get the landmarks of the first face
+        first_face = faces[0]
+        landmarks = face_predictor(gray, first_face)
 
-        # Loop over the face detections
-        # TODO: Algorithm is using all the available faces
-        for rect in rects:
-            landmarks = face_predictor(gray, rect)
+        # Use the coordinates of each eye to compute the eye aspect ratio (EAR)
+        left_eye = self.__extract_landmarks(landmarks, FacialLandmarksIndexes.LEFT_EYE)
+        right_eye = self.__extract_landmarks(landmarks, FacialLandmarksIndexes.RIGHT_EYE)
+        avg_ear = np.mean([
+            self.__eye_aspect_ratio(left_eye),
+            self.__eye_aspect_ratio(right_eye)
+        ])
 
-            # Use the coordinates of each eye to compute the eye aspect ratio.
-            left_aspect_ratio = self.__eye_aspect_ratio(landmarks, range(42, 48))
-            right_aspect_ratio = self.__eye_aspect_ratio(landmarks, range(36, 42))
-            ear = (left_aspect_ratio + right_aspect_ratio) / 2.0 # Eye Aspect Ratio
+        # If eye aspect ratio is below the blink threshold, the eye is closed
+        if avg_ear < self._settings.eye_ratio_threshold:
+            self._eye_closed = True
 
-            # If the eye aspect ratio is below the blink threshold, set the eye_closed flag to True.
-            if ear < self._settings.eye_ratio_threshold:
-                self._eye_closed = True
-
-            # If the eye aspect ratio is above the blink threshold and 
-            # the eye_closed flag is True, increment the number of blinks.
-            elif ear >= self._settings.eye_ratio_threshold and self._eye_closed:
-                self._blinks_count += 1
-                self._eye_closed = False
-
+        # If eye aspect ratio is above the blink threshold and eye is closed,
+        # the eye is open and a blink is registered
+        elif avg_ear >= self._settings.eye_ratio_threshold and self._eye_closed:
+            self._blinks_count += 1
+            self._eye_closed = False
 
 
     def _get_final_result(self) -> AttentionLevelResponse:
@@ -91,34 +94,28 @@ class AttentionLevelAnalyzer(BaseVideoAnalyzer[AttentionLevelResponse]):
         return result
 
 
-    def __eye_aspect_ratio(self, landmarks, eye_range):
+    def __extract_landmarks(self, landmarks, landmarks_indexes: tuple[int, int]) -> np.ndarray:
+        """
+        Extract coordinates (x, y) from the provided face landmarks given the start and end indexes.
+
+        Returns a 2-dimensional integer numpy array with the coordinates of each eye landmark.
+        """
+        (start, end) = landmarks_indexes
+        return np.array(
+            [(landmarks.part(i).x, landmarks.part(i).y) for i in range(start, end)],
+            dtype=np.int32
+        )
+
+
+    def __eye_aspect_ratio(self, eye_landmarks: np.ndarray) -> float:
         """
         Compute the eye aspect ratio (EAR) given the eye landmarks.
         """
+        if self._settings.eye_ratio_algorithm == "optimized":
+            return optimized_ear(eye_landmarks)
+        return original_ear(eye_landmarks)
+        
 
-        # Get the eye coordinates
-        eye = np.array(
-            [np.array([landmarks.part(i).x, landmarks.part(i).y]) for i in eye_range]
-        )
-
-        # Compute the euclidean distances
-        B = norm(eye[0] - eye[3])
-        A = self.__mid_line_distance(eye[1], eye[2], eye[5], eye[4])
-
-        # Use the euclidean distance to compute the aspect ratio
-        ear = A / B
-        return ear
-    
-
-    def __mid_line_distance(self, p1 ,p2, p3, p4):
-        """
-        Compute the euclidean distance between the midpoints of the two sets of points.
-        """
-        p5 = np.array([int((p1[0] + p2[0])/2), int((p1[1] + p2[1])/2)])
-        p6 = np.array([int((p3[0] + p4[0])/2), int((p3[1] + p4[1])/2)])
-        return norm(p5 - p6)
-    
-    
     def __calculate_attention_level(self, blink_rate_per_minute):
         """
         Calculate the attention level based on the blink rate per minute.

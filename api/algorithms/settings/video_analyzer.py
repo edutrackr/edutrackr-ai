@@ -16,7 +16,7 @@ class VideoAnalyzerSettings:
     def __init__(
         self,
         video_resolution: str = VideoResolution.LOW,
-        discarded_frames: int | Literal["auto"] = DEFAULT_DISCARDED_FRAMES_VALUE,
+        discarded_frames: int | Literal["auto"] = DEFAULT_DISCARDED_FRAMES_VALUE
     ):
         self.video_resolution = video_resolution
         self.discarded_frames = discarded_frames
