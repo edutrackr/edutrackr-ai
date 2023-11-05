@@ -37,6 +37,16 @@ python main.py --dev --watch
 
 > Reading environment variables from `.env` file and auto-reload are only available in development mode.
 
+### Testing
+
+To test the API, run the following command:
+
+```bash
+python tests/test_suite.py
+```
+
+> To display the complete excetion output in console, use the flag `-v` or `--verbose`.
+
 ### Deployment
 
 To run the API, run the following command:
