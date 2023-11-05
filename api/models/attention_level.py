@@ -8,6 +8,5 @@ class AttentionLevelRequest(BaseModel):
 
 class AttentionLevelResponse(BaseModel):
     blinks: int
-    duration: DecimalField
     blink_rate: DecimalField
-    status: str
+    level: str
