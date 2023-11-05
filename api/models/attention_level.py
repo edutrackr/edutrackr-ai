@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from api.common.annotations import DecimalField
 
 
 class AttentionLevelRequest(BaseModel):
@@ -7,6 +8,5 @@ class AttentionLevelRequest(BaseModel):
 
 class AttentionLevelResponse(BaseModel):
     blinks: int
-    duration: float
-    blink_rate: float
-    status: str
+    blink_rate: DecimalField
+    level: str

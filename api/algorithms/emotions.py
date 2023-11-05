@@ -1,92 +1,146 @@
 import os
 import cv2
-import imutils
 import numpy as np
 from decimal import Decimal
 from keras.preprocessing.image import img_to_array
 from keras.models import load_model
-from api.models.emotions import EmotionDetail
+from api.algorithms.video_analyzer import BaseVideoAnalyzer
+from api.algorithms.settings.emotions import EmotionsSettings
+from api.common.constants.emotions import EMOTION_TYPES
+from api.models.emotions import EmotionDetail, EmotionsResponse
 from config import AIConfig
 
+
 # Disable tensorflow compilation warnings
-os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-# Tipos de emociones del detector
-classes = ['angry','disgust','fear','happy','neutral','sad','surprise']
+face_model = cv2.dnn.readNet(AIConfig.Emotions.PROTOTXT_PATH, AIConfig.Emotions.WEIGHTS_PATH)
+"""
+The face detector model (based on FaceNet).
+"""
 
-# Cargamos el  modelo de detección de rostros
-faceNet = cv2.dnn.readNet(AIConfig.Emotions.PROTOTXT_PATH, AIConfig.Emotions.WEIGHTS_PATH)
+emotion_model: any = load_model(AIConfig.Emotions.CLASSIFICATION_MODEL_PATH) # type: ignore
+"""
+The emotion classification model.
+"""
 
-# Carga el detector de clasificación de emociones
-emotionModel = load_model(AIConfig.Emotions.CLASSIFICATION_MODEL_PATH)
+
+class EmotionsAnalyzer(BaseVideoAnalyzer[EmotionsResponse]):
+    """
+    Analyzer for the emotions algorithm.
+    """
+    
+    _settings: EmotionsSettings
+    """
+    The settings for the analyzer.
+    """
+
+    _total_confidence_by_emotion: dict[str, float]
+    """
+    The total confidence for each emotion.
+    """
+
+    _prediction_count_by_emotion: dict[str, int]
+    """
+    The number of predictions for each emotion.
+    """
 
 
-# Retorna las localizaciones de los rostros y las predicciones de emociones de cada rostro
-def __predict_emotion(frame,faceNet,emotionModel):
-	# Construye un blob de la imagen
-	blob = cv2.dnn.blobFromImage(frame, 1.0, (224, 224),(104.0, 177.0, 123.0))
-	
-	# Realiza las detecciones de rostros a partir de la imagen
-	faceNet.setInput(blob)
-	detections = faceNet.forward()
+    def __init__(self, settings: EmotionsSettings):
+        super().__init__(settings.video)
+        self._settings = settings
 
-	# Listas para guardar rostros, ubicaciones y predicciones
-	faces = []
-	locs = []
-	preds = []
-	
-	# Recorre cada una de las detecciones
-	for i in range(0, detections.shape[2]):
-		
-		# Fija un umbral para determinar que la detección es confiable
-		# Tomando la probabilidad asociada en la deteccion
 
-		if detections[0, 0, i, 2] > 0.4:
-			# Toma el bounding box de la detección escalado
-			# de acuerdo a las dimensiones de la imagen
-			box = detections[0, 0, i, 3:7] * np.array([frame.shape[1], frame.shape[0], frame.shape[1], frame.shape[0]])
-			(Xi, Yi, Xf, Yf) = box.astype("int")
+    def _reset_state(self) -> None:
+        self._total_confidence_by_emotion = {}
+        self._prediction_count_by_emotion = {}
 
-			# Valida las dimensiones del bounding box
-			if Xi < 0: Xi = 0
-			if Yi < 0: Yi = 0
-			
-			# Se extrae el rostro y se convierte BGR a GRAY
-			# Finalmente se escala a 224x244
-			face = frame[Yi:Yf, Xi:Xf]
-			face = cv2.cvtColor(face, cv2.COLOR_BGR2GRAY)
-			face = cv2.resize(face, (48, 48))
-			face2 = img_to_array(face)
-			face2 = np.expand_dims(face2,axis=0)
 
-			# Se agrega los rostros y las localizaciones a las listas
-			faces.append(face2)
-			locs.append((Xi, Yi, Xf, Yf))
+    def _analyze_frame(self, frame: np.ndarray) -> None:
+        # Predict emotion
+        prediction = self.__predict_emotion(frame)
+        
+        # Skip if no prediction was made
+        if prediction is None:
+            return
+        
+        for i in range(0, len(prediction)):
+            label = EMOTION_TYPES[i]
+            confidence = prediction[i]
 
-			pred = emotionModel.predict(face2, verbose=0)
-			preds.append(pred[0])
+            if label in self._total_confidence_by_emotion:
+                self._total_confidence_by_emotion[label] += confidence
+                self._prediction_count_by_emotion[label] += 1
+            else:
+                self._total_confidence_by_emotion[label] = confidence
+                self._prediction_count_by_emotion[label] = 1    
+    
+    
+    def _get_final_result(self) -> EmotionsResponse:
+        emotions_detail = []
+        for label, total in self._total_confidence_by_emotion.items():
+            # Calculate the average confidence
+            count = self._prediction_count_by_emotion[label]
+            average = total / count
+            emotions_detail.append(EmotionDetail(
+                label=label,
+                confidence=Decimal(f"{average:.3f}")
+            ))
+        result = EmotionsResponse(
+            result=emotions_detail
+        )
+        return result
 
-	return (locs,preds)
 
-def analyze_emotions(videopath:str):
-	cam = cv2.VideoCapture(videopath)
-	# Se toma un frame de la cámara y se redimensiona
-	ret, frame = cam.read()
-	frame = imutils.resize(frame, width=640)
-	(locs, preds) = __predict_emotion(frame,faceNet,emotionModel)
-	
-	if len(preds)==0:
-		return []
+    def __predict_emotion(self, frame: np.ndarray) -> np.ndarray | None:
+        """
+        Detect faces in the frame and predict the emotion of each face.
+        """
 
-	pred=preds[0]
-	result = []
+        # Convert the frame to a blob
+        blob = cv2.dnn.blobFromImage(frame, 1.0, (224, 224), (104.0, 177.0, 123.0))
+        
+        # Detect faces in the frame
+        face_model.setInput(blob)
+        detections = face_model.forward()
 
-	for i in range(0, len(pred)):
-		roundedConfidence = "{:.2f}".format(pred[i])
-		result.append(EmotionDetail(
-			label=classes[i],
-			confidence=Decimal(roundedConfidence)
-		))
+        # Skip if no faces were detected
+        total_detected_faces = detections.shape[2]
+        if total_detected_faces == 0:
+            return None
 
-	cam.release()
-	return result
+        # Take the first face
+        first_face = detections[0, 0, 0]
+
+        # Check if the confidence of the first detection is enough
+        confidence = first_face[2] # Face detection confidence/probability
+        if confidence < self._settings.face_detection_confidence:
+            return None
+        
+        # Extract the face from the frame
+        face_array = self.__extract_face(frame, first_face)
+
+        # Predict the emotion
+        prediction = emotion_model.predict(face_array, verbose=0)[0] # The prediction is a matrix (only take the first row)
+        return prediction
+
+
+    def __extract_face(self, frame: np.ndarray, face: np.ndarray) -> np.ndarray:
+        """
+        Extracts the face from the frame.
+        """
+        # Use the bounding box of the detection scaled to the dimensions of the image
+        box = face[3:7] * np.array([frame.shape[1], frame.shape[0], frame.shape[1], frame.shape[0]])
+        (Xi, Yi, Xf, Yf) = box.astype("int")
+
+        # Normalize the bounding box coordinates
+        if Xi < 0: Xi = 0
+        if Yi < 0: Yi = 0
+            
+        # Extract the face from the frame, convert it to grayscale and resize it to 48x48
+        extracted_face = frame[Yi:Yf, Xi:Xf]
+        extracted_face = cv2.cvtColor(extracted_face, cv2.COLOR_BGR2GRAY)
+        extracted_face = cv2.resize(extracted_face, (48, 48))
+        face_array = img_to_array(extracted_face)
+        face_array = np.expand_dims(face_array, axis=0)
+        return face_array

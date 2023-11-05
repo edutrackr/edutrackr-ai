@@ -2,7 +2,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Edutrackr: Web API (Dev)",
+            "name": "Edutrackr: Web API (dev)",
             "type": "python",
             "request": "launch",
             "module": "main",
