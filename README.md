@@ -49,13 +49,11 @@ python main.py
 
 ## Samples
 
-To run any AI sample, run the following command:
+To run any AI sample, just run the following command:
 
 ```bash
-python <sample_name>.py --dev
+python <sample_name>.py
 ```
-
-> To run the sample in development mode, add the `--dev` flag in order to read the environment variables from the `.env` file.
 
 ## Project Structure
 
