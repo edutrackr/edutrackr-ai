@@ -21,7 +21,7 @@ class AppConfig:
     class Swagger:
         TITLE = "Edutrackr AI"
         DESCRIPTION = "AI Engine for Edutrackr"
-        VERSION = "2.0.0"
+        VERSION = "1.0.0"
 
     class Auth:
         API_KEY = get_env(Environment.API_KEY)
