@@ -1,7 +1,7 @@
 import os
 import sys
 from dotenv import load_dotenv
-from api.common.constants.runtime import RuntimeArgs
+from api.common.constants.runtime import Environment, RuntimeArgs
 from api.common.utils.os import get_env, get_path
 from api.common.utils.runtime import has_arg
 
@@ -9,14 +9,14 @@ from api.common.utils.runtime import has_arg
 app_path = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(app_path)
 
-IS_DEV = has_arg(RuntimeArgs.DEV_MODE)
+IS_DEV = has_arg(RuntimeArgs.DEV_MODE) or get_env(Environment.DEV_MODE, "false").lower() == "true"
 if IS_DEV:
     load_dotenv(override=True)
 
 class AppConfig:
     IS_DEV = IS_DEV
-    PORT = int(get_env("PORT", 8000))
-    STORAGE_PATH = get_env("STORAGE_PATH", os.path.join(os.getcwd(), "tests/videos"))
+    PORT = int(get_env(Environment.PORT, 8000))
+    STORAGE_PATH = get_env(Environment.STORAGE_PATH, os.path.join(os.getcwd(), "tests/videos"))
 
     class Swagger:
         TITLE = "Edutrackr AI"
@@ -24,7 +24,7 @@ class AppConfig:
         VERSION = "2.0.0"
 
     class Auth:
-        API_KEY = get_env("API_KEY")
+        API_KEY = get_env(Environment.API_KEY)
         API_KEY_NAME = "api_key"
 
 class AIConfig:

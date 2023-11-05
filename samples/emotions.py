@@ -1,18 +1,27 @@
 import os
 import sys
 
+
+# Initial setup
+
 app_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(app_path) # This is to allow the import of config.py
+sys.path.append(app_path) # This is to allow the import of config.py and any static resource file
+os.chdir(app_path) # This is to allow the import any api module
+
+from api.common.constants.runtime import Environment
+os.environ[Environment.DEV_MODE] = "true"
+
 
 ###
 
+
 import cv2
 import time
-import imutils
 import numpy as np
 from keras.preprocessing.image import img_to_array
 from keras.models import load_model
 from config import AIConfig
+
 
 # Variables para calcular FPS
 time_actualframe = 0
@@ -29,6 +38,11 @@ emotionModel = load_model(AIConfig.Emotions.CLASSIFICATION_MODEL_PATH)
 
 # Se crea la captura de video
 cam = cv2.VideoCapture(0,cv2.CAP_DSHOW)
+
+if not cam.isOpened():
+    print("No se pudo acceder a la cámara")
+    exit()
+
 # Toma la imagen, los modelos de detección de rostros y mascarillas 
 # Retorna las localizaciones de los rostros y las predicciones de emociones de cada rostro
 def predict_emotion(frame,faceNet,emotionModel):
@@ -45,7 +59,8 @@ def predict_emotion(frame,faceNet,emotionModel):
     preds = []
     
     # Recorre cada una de las detecciones
-    for i in range(0, detections.shape[2]):
+    total_detected_faces = detections.shape[2]
+    for i in range(0, total_detected_faces):
         
         # Fija un umbral para determinar que la detección es confiable
         # Tomando la probabilidad asociada en la deteccion
@@ -80,7 +95,7 @@ def predict_emotion(frame,faceNet,emotionModel):
 while True:
     # Se toma un frame de la cámara y se redimensiona
     ret, frame = cam.read()
-    frame = imutils.resize(frame, width=640)
+    frame = cv2.resize(frame, (640, 480))
 
     (locs, preds) = predict_emotion(frame,faceNet,emotionModel)
     
@@ -102,6 +117,7 @@ while True:
 
     time_actualframe = time.time()
 
+    fps = 0
     if time_actualframe>time_prevframe:
         fps = 1/(time_actualframe-time_prevframe)
     
