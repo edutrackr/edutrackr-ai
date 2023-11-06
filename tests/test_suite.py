@@ -7,7 +7,7 @@ sys.path.append(app_path)
 ###
 
 import unittest
-from api.common.utils import has_arg
+from api.common.utils.runtime import has_arg
 
 
 def suite():
