@@ -1,0 +1,27 @@
+documentation:
+  - '**/*.md'
+  - '**/*.txt'
+  - 'docs/**'
+
+testing:
+  - 'tests/**'
+
+configuration:
+  - all:
+    - '.github/**'
+    - '.vscode/**'
+    - '.editorconfig'
+    - '.gitattributes'
+    - '.gitignore'
+    - 'Dockerfile'
+    - 'docker-compose*.yml'
+    - 'docker-compose.yml'
+
+api:
+  - 'api/**'
+
+resources:
+  - 'resources/**'
+
+samples:
+  - 'samples/**'
