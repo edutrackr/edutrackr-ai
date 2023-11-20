@@ -87,7 +87,8 @@ class EmotionsAnalyzer(BaseVideoAnalyzer[EmotionsResponse]):
                 confidence=Decimal(f"{average:.3f}")
             ))
         result = EmotionsResponse(
-            result=emotions_detail
+            result=emotions_detail,
+            video_duration=self._video_metadata.duration
         )
         return result
 

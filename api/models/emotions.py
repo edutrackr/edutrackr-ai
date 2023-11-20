@@ -13,3 +13,4 @@ class EmotionDetail(BaseModel):
 
 class EmotionsResponse(BaseModel):
     result: list[EmotionDetail] = []
+    video_duration: DecimalField 

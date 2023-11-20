@@ -10,3 +10,4 @@ class AttentionLevelResponse(BaseModel):
     blinks: int
     blink_rate: DecimalField
     level: str
+    video_duration: DecimalField 
