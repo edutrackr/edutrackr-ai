@@ -1,0 +1,25 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Edutrackr: Web API (dev)",
+            "type": "python",
+            "request": "launch",
+            "module": "main",
+            "args": [
+                "--dev",
+                "--watch"
+            ],
+            "jinja": true,
+            "justMyCode": true
+        },
+        {
+            "name": "Edutrackr: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ]
+}
