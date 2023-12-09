@@ -2,6 +2,8 @@
 Utility functions for video processing.
 """
 
+import math
+from typing import Union
 import ffmpeg
 from api.common.constants.video import OPTIMAL_SIZE_BY_ASPECT_RATIO, VideoAspectRatio
 
@@ -44,10 +46,21 @@ class VideoMetadata:
         self.duration = round(float(raw_metadata['duration']), 2)
         self.original_width = int(raw_metadata['width'])
         self.original_height = int(raw_metadata['height'])
-        self.aspect_ratio = raw_metadata['display_aspect_ratio']
+        self.aspect_ratio = self.__get_aspect_ratio(raw_metadata, 'display_aspect_ratio')
         self.video_resolution = resolution
         self.optimal_width, self.optimal_height = self.__calculate_optimal_size()
 
+    def __get_aspect_ratio(self, raw_metadata: dict, aspect_ratio_key: str) -> str:
+        """
+        Get the aspect ratio of the video in the format of "width:height" (e.g. "16:9").
+        """
+
+        if raw_metadata.get(aspect_ratio_key) is not None:
+            return raw_metadata[aspect_ratio_key]
+        else:
+            gcd = math.gcd(self.original_width, self.original_height)
+            return f"{self.original_width // gcd}:{self.original_height // gcd}"
+        
     def __calculate_optimal_size(self) -> tuple[int, int]:
         """
         Determine the new optimal width and height of the video based on its aspect ratio.
@@ -108,3 +121,26 @@ def get_video_metadata(
         raw_metadata=raw_metadata,
         resolution=resolution
     )
+
+def convert_video(
+    input_path: str, 
+    output_path: str, 
+    fps: int = 30, 
+    crf: Union[int, None] = None,
+) -> None:
+    """
+    Convert a video to a different resolution using FFmpeg.
+
+    Parameters:
+        - input_path: The path to the input video file.
+        - output_path: The path to the output video file.
+        - fps: The frame rate of the video. The default value is 30.
+        - crf: The constant rate factor (CRF) value used for the video encoding. The value ranges from 0 to 51, where 0 is lossless, 23 is the default, and 51 is the worst quality possible. The recommended value is 18.
+    """
+
+    stream = ffmpeg.input(input_path)
+    if crf is None:
+        stream = stream.output(output_path, r=fps)
+    else:
+        stream = stream.output(output_path, r=fps, crf=crf)
+    stream.run()
