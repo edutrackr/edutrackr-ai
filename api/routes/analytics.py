@@ -15,12 +15,10 @@ def emotions(request: EmotionsRequest) -> EmotionsResponse:
         full_path = get_path(AppConfig.STORAGE_PATH, request.path)
         result = analyze_emotions(full_path)
         return result
+    except AppException as e:
+        raise e
     except Exception as e:
-        print(e)
-        raise AppException(
-            description=str(e),
-            status_code=status.HTTP_400_BAD_REQUEST,
-        )
+        raise AppException(str(e))
 
 @router.post("/attentionLevel")
 def blinks(request: AttentionLevelRequest) -> AttentionLevelResponse:
@@ -28,9 +26,7 @@ def blinks(request: AttentionLevelRequest) -> AttentionLevelResponse:
         full_path = get_path(AppConfig.STORAGE_PATH, request.path)
         result = analyze_attention_level(full_path)
         return result
+    except AppException as e:
+        raise e
     except Exception as e:
-        print(e)
-        raise AppException(
-            description=str(e),
-            status_code=status.HTTP_400_BAD_REQUEST,
-        )
+        raise AppException(str(e))

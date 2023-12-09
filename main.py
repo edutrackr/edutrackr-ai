@@ -17,6 +17,7 @@ app.include_router(router)
 
 @app.exception_handler(AppException)
 async def unicorn_exception_handler(request: Request, ex: AppException):
+    print(ex)
     return JSONResponse(
         status_code=ex.status_code,
         content={ "message": ex.description },
