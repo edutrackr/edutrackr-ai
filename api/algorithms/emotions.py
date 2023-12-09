@@ -88,7 +88,7 @@ class EmotionsAnalyzer(BaseVideoAnalyzer[EmotionsResponse]):
             ))
         result = EmotionsResponse(
             result=emotions_detail,
-            video_duration=self._video_metadata.duration
+            video_duration=Decimal(str(self._video_metadata.duration))
         )
         return result
 

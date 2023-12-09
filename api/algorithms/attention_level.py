@@ -90,7 +90,7 @@ class AttentionLevelAnalyzer(BaseVideoAnalyzer[AttentionLevelResponse]):
             blinks=self._blinks_count,
             blink_rate=Decimal(f"{blink_rate:.3f}"),
             level=self.__calculate_attention_level(blink_rate),
-            video_duration=self._video_metadata.duration
+            video_duration=Decimal(str(self._video_metadata.duration))
         )
         return result
 
