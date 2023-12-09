@@ -16,7 +16,9 @@ if IS_DEV:
 class AppConfig:
     IS_DEV = IS_DEV
     PORT = int(get_env(Environment.PORT, 8000))
-    STORAGE_PATH = get_env(Environment.STORAGE_PATH, os.path.join(os.getcwd(), "tests/videos"))
+
+    STORAGE_PATH = get_env(Environment.STORAGE_PATH, os.path.join(os.getcwd(), ".storage"))
+    VIDEOS_STORE = os.path.join(os.getcwd(), "videos.store")
 
     class Swagger:
         TITLE = "Edutrackr AI"
