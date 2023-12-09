@@ -127,6 +127,7 @@ def convert_video(
     output_path: str, 
     fps: int = 30, 
     crf: Union[int, None] = None,
+    quiet: bool = True
 ) -> None:
     """
     Convert a video to a different resolution using FFmpeg.
@@ -143,4 +144,4 @@ def convert_video(
         stream = stream.output(output_path, r=fps)
     else:
         stream = stream.output(output_path, r=fps, crf=crf)
-    stream.run()
+    stream.run(quiet=quiet)
