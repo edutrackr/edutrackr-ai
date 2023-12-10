@@ -3,6 +3,7 @@ import threading
 import os
 import uuid
 
+
 class IObjectStore:
     """
     Interface for object store.
@@ -38,6 +39,7 @@ class IObjectStore:
         Clears the store.
         """
         raise NotImplementedError
+
 
 class LocalObjectStore(IObjectStore):
     """
