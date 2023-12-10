@@ -7,20 +7,19 @@ from api.services.videos import upload_video
 router = APIRouter(prefix="/videos")
 
 @router.post("/upload")
-def upload(video: UploadFile, skip_conversion: Annotated[bool, Form()] = False):
+def upload(video: UploadFile):
     try:
-        video_path = upload_video(video, skip_conversion)
-        return {"message": "Video uploaded successfully", "video_path": video_path}
+        result = upload_video(video)
+        return result
     except AppException as e:
         raise e
     except Exception as e:
         raise AppException(str(e))
 
 @router.delete("/delete")
-def delete_video(file_id: str):
+def delete_video(video_id: str):
     try:
-        delete_video(file_id)
-        return {"message": "Video deleted successfully"}
+        delete_video(video_id)
     except AppException as e:
         raise e
     except Exception as e:
