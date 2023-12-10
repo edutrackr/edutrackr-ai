@@ -2,6 +2,12 @@ import os
 import pathlib
 
 
+def check_file(base_path, file_path) -> str:
+    full_path = os.path.join(base_path, file_path)
+    if not os.path.exists(full_path):
+        raise ValueError(f"File '{full_path}' does not exist")
+    return full_path
+
 def write_file(path, content, binary=True):
     write_mode = "wb" if binary else "w"
     with open(path, write_mode) as f:
