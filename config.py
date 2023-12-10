@@ -13,12 +13,16 @@ IS_DEV = has_arg(RuntimeArgs.DEV_MODE) or get_env(Environment.DEV_MODE, "false")
 if IS_DEV:
     load_dotenv(override=True)
 
+STORAGE_PATH = get_env(Environment.STORAGE_PATH, os.path.join(os.getcwd(), ".storage"))
+
 class AppConfig:
     IS_DEV = IS_DEV
     PORT = int(get_env(Environment.PORT, 8000))
 
-    STORAGE_PATH = get_env(Environment.STORAGE_PATH, os.path.join(os.getcwd(), ".storage"))
-    VIDEOS_STORE = os.path.join(os.getcwd(), "videos.store")
+    class Videos:
+        TEMP_PATH = get_path(STORAGE_PATH, "temp")
+        STORAGE_PATH = get_path(STORAGE_PATH, "videos")
+        DB_PATH = get_path(STORAGE_PATH, "videos.json")
 
     class Swagger:
         TITLE = "Edutrackr AI"
@@ -37,3 +41,6 @@ class AIConfig:
         PROTOTXT_PATH = get_path(app_path, "resources/emotions/face_detector/deploy.prototxt")
         WEIGHTS_PATH = get_path(app_path, "resources/emotions/face_detector/res10_300x300_ssd_iter_140000.caffemodel")
         CLASSIFICATION_MODEL_PATH = get_path(app_path, "resources/emotions/modelFEC.h5")
+
+class TestingConfig:
+    TEMP_PATH = os.path.join(os.getcwd(), "tests/.temp")
