@@ -1,8 +1,8 @@
-import os
 import cv2
 import numpy as np
 from typing import Generic, TypeVar
 from api.algorithms.settings.video_analyzer import VideoAnalyzerSettings
+from api.common.utils.os import path_exists
 from api.common.utils.video import VideoMetadata, get_video_metadata
 from api.common.constants.video import DEFAULT_DISCARDED_FRAMES_RATE, DEFAULT_DISCARDED_FRAMES_VALUE
 
@@ -35,7 +35,7 @@ class BaseVideoAnalyzer(Generic[TResult]):
         """
 
         # Validate the video path
-        if not os.path.exists(video_path):
+        if not path_exists(video_path):
             raise FileNotFoundError(f"Video file not found: '{video_path}'")
 
         # Initialize the video capture object

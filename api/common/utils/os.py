@@ -21,3 +21,6 @@ def make_dirs(path):
 
 def join_path(*args) -> str:
     return os.path.join(*args)
+
+def path_exists(path) -> bool:
+    return os.path.exists(path)
