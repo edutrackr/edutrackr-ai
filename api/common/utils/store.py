@@ -54,41 +54,38 @@ class LocalObjectStore(IObjectStore):
     Lock for thread-safe access to the data.
     """
 
-    data: dict
-    """
-    Data stored in the file.
-    """
-
     def __init__(self, file_path: str):
         self.file_path = file_path
         self.lock = threading.Lock()
-        self.data = self._load_data()
         self._init_db()
 
     def get_all(self) -> dict:
         with self.lock:
-            return self.data.copy()
+            data = self._load_data()
+            return data
 
     def get_by_id(self, key: str) -> dict | None:
-        with self.lock:
-            return self.data.get(key)
+         with self.lock:
+            data = self._load_data()
+            return data.get(key)
 
     def add(self, value: dict) -> str:
         key = self._generate_key()
         with self.lock:
-            self.data[key] = value
-            self._save_data()
+            data = self._load_data()
+            data[key] = value
+            self._save_data(data)
         return key
 
     def delete(self, key: str) -> None:
         with self.lock:
-            if key in self.data:
-                del self.data[key]
-                self._save_data()
+            data = self._load_data()
+            if key in data:
+                del data[key]
+                self._save_data(data)
 
     def clear(self) -> None:
         with self.lock:
-            self.data = {}
             self._save_data()
 
     def _init_db(self) -> None:
@@ -111,9 +108,9 @@ class LocalObjectStore(IObjectStore):
                     return {}
         return {}
 
-    def _save_data(self) -> None:
+    def _save_data(self, data: dict = {}) -> None:
         with open(self.file_path, 'w') as file:
-            json.dump(self.data, file, indent=4)
+            json.dump(data, file, indent=4)
 
     def _generate_key(self) -> str:
         return uuid.uuid4().hex
