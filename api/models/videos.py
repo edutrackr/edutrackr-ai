@@ -6,6 +6,11 @@ class UploadVideoResponse(BaseModel):
     video_id: str
 
 
+class DeleteVideoRequest(BaseModel):
+    
+    video_id: str
+
+
 class VideoMetadata(BaseModel):
 
     video_path: str

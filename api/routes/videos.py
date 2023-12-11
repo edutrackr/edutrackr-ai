@@ -1,5 +1,6 @@
 from fastapi import APIRouter, UploadFile
 from api.common.exceptions import AppException
+from api.models.videos import DeleteVideoRequest
 from api.services.videos import upload_video, delete_video
 
 
@@ -15,10 +16,10 @@ def upload(video: UploadFile):
     except Exception as e:
         raise AppException(str(e))
 
-@router.delete("/delete")
-def delete(video_id: str):
+@router.post("/delete")
+def delete(request: DeleteVideoRequest):
     try:
-        delete_video(video_id)
+        delete_video(request.video_id)
     except AppException as e:
         raise e
     except Exception as e:
