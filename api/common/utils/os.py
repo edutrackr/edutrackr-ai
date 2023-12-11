@@ -15,14 +15,12 @@ def remove_env(key):
     if key in os.environ:
         os.environ.pop(key)
 
-def get_path(base_path, file_path):
-    full_path = os.path.join(base_path, file_path)
-    if not os.path.exists(full_path):
-        raise ValueError(f"Path '{full_path}' does not exist")
-    return full_path
+def make_dirs(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
 
-def gen_key():
-    return str(os.urandom(16).hex())
+def join_path(*args) -> str:
+    return os.path.join(*args)
 
-if __name__ == "__main__":
-    print(gen_key())
+def path_exists(path) -> bool:
+    return os.path.exists(path)

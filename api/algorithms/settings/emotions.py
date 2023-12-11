@@ -11,8 +11,8 @@ class EmotionsSettings:
 
     def __init__(
         self, 
-        video: VideoAnalyzerSettings = VideoAnalyzerSettings(),
+        video_settings: VideoAnalyzerSettings,
         face_detection_confidence: float = 0.4
     ):
-        self.video = video
+        self.video_settings = video_settings
         self.face_detection_confidence = face_detection_confidence

@@ -1,10 +1,11 @@
-import os
 import cv2
 import numpy as np
 from typing import Generic, TypeVar
 from api.algorithms.settings.video_analyzer import VideoAnalyzerSettings
-from api.common.utils.video import VideoMetadata, get_video_metadata
+from api.common.utils.os import path_exists
 from api.common.constants.video import DEFAULT_DISCARDED_FRAMES_RATE, DEFAULT_DISCARDED_FRAMES_VALUE
+from api.common.utils.video import calculate_optimal_size
+from api.models.videos import VideoOptimalSize
 
 
 TResult = TypeVar("TResult")
@@ -19,35 +20,34 @@ class BaseVideoAnalyzer(Generic[TResult]):
     The video settings for the analyzer.
     """
 
-    _video_metadata: VideoMetadata
+    _video_optimal_size: VideoOptimalSize
     """
-    The video metadata. Available after the video is opened (in the run method).
+    The optimal size for the video.
     """
 
+    _discarded_frames: int
+    """
+    The number of frames to discard.
+    """
 
     def __init__(self, video_settings: VideoAnalyzerSettings):
         self._video_settings = video_settings
+        self._video_optimal_size = self._calculate_optimal_size()
+        self._discarded_frames = self._calculate_discarded_frames()
 
 
-    def run(self, video_path: str) -> TResult:
+    def run(self) -> TResult:
         """
         Run the analysis on the video.
         """
 
         # Validate the video path
-        if not os.path.exists(video_path):
-            raise FileNotFoundError(f"Video file not found: '{video_path}'")
+        video_path = self._video_settings.metadata.video_path
+        if not path_exists(video_path):
+            raise FileNotFoundError(f"File not found: '{video_path}'")
 
         # Initialize the video capture object
         video = cv2.VideoCapture(video_path)
-
-        # Get the video metadata
-        video_metadata = get_video_metadata(video_path, self._video_settings.video_resolution)
-        if video_metadata is None:
-            raise Exception("Unable to get video metadata")
-        self._video_metadata = video_metadata
-
-        discarded_frames = self._calculate_discarded_frames()
 
         skipped_frames = 0
         self._reset_state()
@@ -58,7 +58,7 @@ class BaseVideoAnalyzer(Generic[TResult]):
                 break
 
             # Validate skipped frames
-            if skipped_frames < discarded_frames:
+            if skipped_frames < self._discarded_frames:
                 skipped_frames += 1
                 continue
             else:
@@ -66,8 +66,8 @@ class BaseVideoAnalyzer(Generic[TResult]):
 
             # Resize the frame
             frame = cv2.resize(frame, (
-                self._video_metadata.optimal_width,
-                self._video_metadata.optimal_height
+                self._video_optimal_size.width,
+                self._video_optimal_size.height
             ))
 
             # Analyze the frame
@@ -77,13 +77,23 @@ class BaseVideoAnalyzer(Generic[TResult]):
         # Get the final result
         return self._get_final_result()
 
+    
+    def _calculate_optimal_size(self) -> VideoOptimalSize:
+        """
+        Calculate the optimal size for the video.
+        """
+        return calculate_optimal_size(
+            self._video_settings.metadata, 
+            self._video_settings.video_resolution
+        )
+
 
     def _calculate_discarded_frames(self) -> int:
         """
-        Calculate the number of frames to discard
+        Calculate the number of frames to discard.
         """
         if self._video_settings.discarded_frames == DEFAULT_DISCARDED_FRAMES_VALUE:
-            return int(self._video_metadata.avg_fps * DEFAULT_DISCARDED_FRAMES_RATE)
+            return int(self._video_settings.metadata.avg_fps * DEFAULT_DISCARDED_FRAMES_RATE)
         else:
             return self._video_settings.discarded_frames
 

@@ -18,10 +18,10 @@ class AttentionLevelSettings:
 
     def __init__(
         self, 
-        video: VideoAnalyzerSettings = VideoAnalyzerSettings(),
+        video_settings: VideoAnalyzerSettings,
         eye_ratio_threshold: float = 0.2,
         eye_ratio_algorithm: str = EyeRatioAlgorithm.OPTIMIZED
     ):
-        self.video = video
+        self.video_settings = video_settings
         self.eye_ratio_threshold = eye_ratio_threshold
         self.eye_ratio_algorithm = eye_ratio_algorithm

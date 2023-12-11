@@ -47,7 +47,7 @@ class EmotionsAnalyzer(BaseVideoAnalyzer[EmotionsResponse]):
 
 
     def __init__(self, settings: EmotionsSettings):
-        super().__init__(settings.video)
+        super().__init__(settings.video_settings)
         self._settings = settings
 
 
@@ -86,8 +86,10 @@ class EmotionsAnalyzer(BaseVideoAnalyzer[EmotionsResponse]):
                 label=label,
                 confidence=Decimal(f"{average:.3f}")
             ))
+        duration = self._video_settings.metadata.duration
         result = EmotionsResponse(
-            result=emotions_detail
+            result=emotions_detail,
+            video_duration=Decimal(str(duration))
         )
         return result
 

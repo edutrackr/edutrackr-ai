@@ -1,101 +1,39 @@
 """
-Utility functions for video processing.
+Utilities for video processing.
 """
 
+import math
+from typing import Union
 import ffmpeg
-from api.common.constants.video import OPTIMAL_SIZE_BY_ASPECT_RATIO, VideoAspectRatio
+from api.common.constants.video import OPTIMAL_SIZE_BY_ASPECT_RATIO, VideoAspectRatio, VideoResolution
+from api.models.videos import VideoMetadata, VideoOptimalSize
 
 
-class VideoMetadata:
-    avg_fps: float
-    """Average FPS of the video (rounded to 2 decimal places)."""
-
-    frame_count: int
-    """Number of frames in the video."""
-
-    duration: float
-    """Duration of the video in seconds (rounded to 2 decimal places)."""
-
-    original_width: int
-    """Original width of the video in pixels."""
-
-    optimal_width: int
-    """Optimal width of the video in pixels based on its aspect ratio."""
-
-    original_height: int
-    """Original height of the video in pixels."""
-
-    optimal_height: int
-    """Optimal height of the video in pixels based on its aspect ratio."""
-
-    aspect_ratio: str
-    """Aspect ratio of the video in the format of "width:height" (e.g. "16:9")."""
-
-    video_resolution: str
-    """Video resolution based on the constants in `api.common.constants.video.VideoResolution`."""
-
-    def __init__(self, raw_metadata: dict, resolution: str):
-        """
-        Initialize a new VideoMetadata object from a dictionary containing the raw metadata of a video using FFmpeg.
-        """
-
-        self.avg_fps = round(self.__parse_video_fps(raw_metadata['avg_frame_rate']), 2)
-        self.frame_count = int(raw_metadata['nb_frames'])
-        self.duration = round(float(raw_metadata['duration']), 2)
-        self.original_width = int(raw_metadata['width'])
-        self.original_height = int(raw_metadata['height'])
-        self.aspect_ratio = raw_metadata['display_aspect_ratio']
-        self.video_resolution = resolution
-        self.optimal_width, self.optimal_height = self.__calculate_optimal_size()
-
-    def __calculate_optimal_size(self) -> tuple[int, int]:
-        """
-        Determine the new optimal width and height of the video based on its aspect ratio.
-        """
-
-        if self.video_resolution == "original" or self.video_resolution not in OPTIMAL_SIZE_BY_ASPECT_RATIO:
-            return self.original_width, self.original_height
-
-        config = OPTIMAL_SIZE_BY_ASPECT_RATIO[self.video_resolution]
-        if self.aspect_ratio in config:
-            return config[self.aspect_ratio]
-        else:
-            return config[VideoAspectRatio.OTHER]
-
-    def __parse_video_fps(self, fps: str) -> float:
-        fps_str = fps.split('/')
-        if len(fps_str) == 1:
-            return float(fps)
-        else:
-            return float(fps_str[0]) / float(fps_str[1])
-
-    def to_dict(self) -> dict:
-        return {
-            "avg_fps": self.avg_fps,
-            "frame_count": self.frame_count,
-            "duration": self.duration,
-            "original_width": self.original_width,
-            "optimal_width": self.optimal_width,
-            "original_height": self.original_height,
-            "optimal_height": self.optimal_height,
-            "aspect_ratio": self.aspect_ratio,
-            "video_resolution": self.video_resolution
-        }
-    
-    def __repr__(self) -> str:
-        return f"VideoMetadata({self.to_dict()})"
-
-
-def get_video_metadata(
-    path: str, 
-    resolution: str
-) -> VideoMetadata | None:
+def _parse_video_fps(fps: str) -> float:
     """
-    Get the metadata of a video using FFmpeg.
+    Parse the frame rate of the video (e.g. "30/1").
+    """
+    fps_str = fps.split('/')
+    if len(fps_str) == 1:
+        return float(fps)
+    else:
+        return float(fps_str[0]) / float(fps_str[1])
+
+
+def _calculate_aspect_ratio(width: int, height: int) -> str:
+    """
+    Get the aspect ratio of the video in the format of "width:height" (e.g. "16:9").
+    """
+    gcd = math.gcd(width, height)
+    return f"{width // gcd}:{height // gcd}"
+
+     
+def extract_metadata(path: str) -> VideoMetadata | None:
+    """
+    Extract the metadata of a video using FFmpeg.
 
     Parameters:
         - path: The path to the video file.
-        - resolution: The resolution of the video. Use the constants available in `api.common.constants.video.VideoResolution`.
     """
 
     probe = ffmpeg.probe(path)
@@ -104,7 +42,76 @@ def get_video_metadata(
     if raw_metadata is None:
         return None
 
-    return VideoMetadata(
-        raw_metadata=raw_metadata,
+    avg_fps = _parse_video_fps(raw_metadata['avg_frame_rate'])
+    frame_count = int(raw_metadata['nb_frames'])
+    duration = float(raw_metadata['duration'])
+    width = int(raw_metadata['width'])
+    height = int(raw_metadata['height'])
+    aspect_ratio = raw_metadata['display_aspect_ratio'] \
+        if 'display_aspect_ratio' in raw_metadata \
+        else _calculate_aspect_ratio(width, height)
+    
+    video_metadata = VideoMetadata(
+        video_path=path,
+        avg_fps=round(avg_fps, 2),
+        frame_count=frame_count,
+        duration=round(duration, 2),
+        width=width,
+        height=height,
+        aspect_ratio=aspect_ratio
+    )
+    return video_metadata
+
+
+def calculate_optimal_size(video_metadata: VideoMetadata, resolution: str) -> VideoOptimalSize:
+    """
+    Determine the new optimal width and height of the video based on its aspect ratio.
+
+    Parameters:
+        - video_metadata: The video metadata.
+        - resolution: The resolution of the video. Use the constants available in `api.common.constants.video.VideoResolution`.
+    """
+
+    if resolution == VideoResolution.ORIGINAL or resolution not in OPTIMAL_SIZE_BY_ASPECT_RATIO:
+        return VideoOptimalSize(
+        width=video_metadata.width,
+        height=video_metadata.height,
         resolution=resolution
     )
+
+    config = OPTIMAL_SIZE_BY_ASPECT_RATIO[resolution]
+    optimal_width, optimal_height = \
+        config[video_metadata.aspect_ratio] if video_metadata.aspect_ratio in config \
+        else config[VideoAspectRatio.OTHER]
+    
+    return VideoOptimalSize(
+        width=optimal_width,
+        height=optimal_height,
+        resolution=resolution
+    )
+
+
+def convert_video(
+    input_path: str, 
+    output_path: str, 
+    fps: int = 30, 
+    crf: Union[int, None] = None,
+    quiet: bool = True
+) -> None:
+    """
+    Convert a video to a different resolution using FFmpeg.
+
+    Parameters:
+        - input_path: The path to the input video file.
+        - output_path: The path to the output video file.
+        - fps: The frame rate of the video.
+        - crf: The constant rate factor (CRF) value used for the video encoding. The value ranges from `0` to `51`, where `0` is lossless, `23` is the default, and `51` is the worst quality possible. The recommended value is `18`.
+        - quiet: Whether to hide the FFmpeg output.
+    """
+
+    stream = ffmpeg.input(input_path)
+    if crf is None:
+        stream = stream.output(output_path, r=fps)
+    else:
+        stream = stream.output(output_path, r=fps, crf=crf)
+    stream.run(quiet=quiet)

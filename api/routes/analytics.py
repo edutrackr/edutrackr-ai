@@ -1,21 +1,36 @@
-from fastapi import APIRouter
-from config import AppConfig
+from fastapi import APIRouter, status
+from api.common.exceptions import AppException
+from api.services.videos import get_video_metadata
 from api.services.analytics import analyze_emotions, analyze_attention_level
-from api.common.utils.os import get_path
 from api.models.attention_level import AttentionLevelRequest, AttentionLevelResponse
 from api.models.emotions import EmotionsRequest, EmotionsResponse
 
 
-router = APIRouter(prefix="/analytics")
+router = APIRouter(prefix="/analytics", tags=["Analytics"])
 
 @router.post("/emotions")
 def emotions(request: EmotionsRequest) -> EmotionsResponse:
-    full_path = get_path(AppConfig.STORAGE_PATH, request.path)
-    result = analyze_emotions(full_path)
-    return result
+    try:
+        video_metadata = get_video_metadata(request.video_id)
+        if video_metadata is None:
+            raise AppException("Video not found", status_code=status.HTTP_404_NOT_FOUND)
+        result = analyze_emotions(video_metadata)
+        return result
+    except AppException as e:
+        raise e
+    except Exception as e:
+        raise AppException(str(e))
+
 
 @router.post("/attentionLevel")
 def blinks(request: AttentionLevelRequest) -> AttentionLevelResponse:
-    full_path = get_path(AppConfig.STORAGE_PATH, request.path)
-    result = analyze_attention_level(full_path)
-    return result
+    try:
+        video_metadata = get_video_metadata(request.video_id)
+        if video_metadata is None:
+            raise AppException("Video not found", status_code=status.HTTP_404_NOT_FOUND)
+        result = analyze_attention_level(video_metadata)
+        return result
+    except AppException as e:
+        raise e
+    except Exception as e:
+        raise AppException(str(e))

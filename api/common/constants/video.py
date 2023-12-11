@@ -11,6 +11,15 @@ class VideoAspectRatio:
     OTHER = "other"
 
 
+class VideoExtension:
+    MP4 = ".mp4"
+    WEBM = ".webm"
+
+
+VALID_VIDEO_EXTENSIONS = [VideoExtension.MP4, VideoExtension.WEBM]
+"""Valid video extensions."""
+
+
 OPTIMAL_SIZE_BY_ASPECT_RATIO: dict[str, dict[str, tuple[int, int]]] = {
     VideoResolution.MEDIUM: {
         VideoAspectRatio._4_3: (600, 450),

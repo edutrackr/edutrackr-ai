@@ -7,7 +7,8 @@
 Before running the project, make sure you have the following installed:
 - [Python](https://www.python.org/downloads/)
 - [CMake](https://cmake.org/download/) (required for installing `dlib`)
-- [FFmpeg](https://ffmpeg.org/download.html) (required for installing `ffmpeg-python`)
+- [FFmpeg](https://github.com/GyanD/codexffmpeg/releases/download/6.1/ffmpeg-6.1-full_build.zip) version 6.1 (required for installing `ffmpeg-python`)
+- Add FFmpeg to the system path
 
 ### Setup
 
