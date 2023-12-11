@@ -1,5 +1,6 @@
 import os
 import sys
+import logging.config
 from dotenv import load_dotenv
 from api.common.constants.runtime import Environment, RuntimeArgs
 from api.common.utils.os import get_env, join_path
@@ -12,6 +13,10 @@ sys.path.append(app_path)
 IS_DEV = has_arg(RuntimeArgs.DEV_MODE) or get_env(Environment.DEV_MODE, "false").lower() == "true"
 if IS_DEV:
     load_dotenv(override=True)
+
+# Configure logging
+logging.config.fileConfig("logging.conf", disable_existing_loggers=False)
+logging.getLogger('watchfiles').setLevel(logging.WARNING)
 
 BASE_STORAGE_PATH = get_env(Environment.STORAGE_PATH, os.path.join(os.getcwd(), ".storage"))
 
