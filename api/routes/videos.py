@@ -1,10 +1,9 @@
-from typing import Annotated
-from fastapi import APIRouter, Form, UploadFile
+from fastapi import APIRouter, UploadFile
 from api.common.exceptions import AppException
-from api.services.videos import upload_video
+from api.services.videos import upload_video, delete_video
 
 
-router = APIRouter(prefix="/videos")
+router = APIRouter(prefix="/videos", tags=["Videos"])
 
 @router.post("/upload")
 def upload(video: UploadFile):
@@ -17,7 +16,7 @@ def upload(video: UploadFile):
         raise AppException(str(e))
 
 @router.delete("/delete")
-def delete_video(video_id: str):
+def delete(video_id: str):
     try:
         delete_video(video_id)
     except AppException as e:

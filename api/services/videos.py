@@ -74,7 +74,3 @@ def delete_video(video_id: str) -> None:
         raise AppException("Video not found", status_code=status.HTTP_404_NOT_FOUND)
     remove_file(video_metadata.video_path)
     videos_db.delete(video_id)
-
-
-def clear_videos() -> None:
-    videos_db.clear()
