@@ -43,7 +43,7 @@ class AttentionLevelAnalyzer(BaseVideoAnalyzer[AttentionLevelResponse]):
 
 
     def __init__(self, settings: AttentionLevelSettings):
-        super().__init__(settings.video)
+        super().__init__(settings.video_settings)
         self._settings = settings
 
 
@@ -85,12 +85,13 @@ class AttentionLevelAnalyzer(BaseVideoAnalyzer[AttentionLevelResponse]):
 
 
     def _get_final_result(self) -> AttentionLevelResponse:
-        blink_rate = self._blinks_count / self._video_metadata.duration * 60 # Blinks per minute
+        duration = self._video_settings.metadata.duration
+        blink_rate = self._blinks_count / duration * 60 # Blinks per minute
         result = AttentionLevelResponse(
             blinks=self._blinks_count,
             blink_rate=Decimal(f"{blink_rate:.3f}"),
             level=self.__calculate_attention_level(blink_rate),
-            video_duration=Decimal(str(self._video_metadata.duration))
+            video_duration=Decimal(str(duration))
         )
         return result
 

@@ -13,16 +13,16 @@ IS_DEV = has_arg(RuntimeArgs.DEV_MODE) or get_env(Environment.DEV_MODE, "false")
 if IS_DEV:
     load_dotenv(override=True)
 
-STORAGE_PATH = get_env(Environment.STORAGE_PATH, os.path.join(os.getcwd(), ".storage"))
+BASE_STORAGE_PATH = get_env(Environment.STORAGE_PATH, os.path.join(os.getcwd(), ".storage"))
 
 class AppConfig:
     IS_DEV = IS_DEV
     PORT = int(get_env(Environment.PORT, 8000))
 
     class Videos:
-        TEMP_PATH = join_path(STORAGE_PATH, "temp")
-        STORAGE_PATH = join_path(STORAGE_PATH, "videos")
-        DB_PATH = join_path(STORAGE_PATH, "videos.json")
+        TEMP_PATH = join_path(BASE_STORAGE_PATH, "temp")
+        STORAGE_PATH = join_path(BASE_STORAGE_PATH, "videos")
+        DB_PATH = join_path(BASE_STORAGE_PATH, "videos.json")
 
     class Swagger:
         TITLE = "Edutrackr AI"

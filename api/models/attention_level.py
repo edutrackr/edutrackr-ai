@@ -3,7 +3,7 @@ from api.common.annotations import DecimalField
 
 
 class AttentionLevelRequest(BaseModel):
-    path: str
+    video_id: str
 
 
 class AttentionLevelResponse(BaseModel):
