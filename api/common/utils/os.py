@@ -16,6 +16,9 @@ def remove_env(key):
         os.environ.pop(key)
 
 def make_dirs(path):
+    """
+    Creates a directory if it does not exist.
+    """
     if not os.path.exists(path):
         os.makedirs(path)
 
