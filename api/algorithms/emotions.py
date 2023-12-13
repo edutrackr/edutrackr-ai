@@ -14,7 +14,6 @@ from config import AIConfig
 # Disable tensorflow compilation warnings
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-face_model = cv2.dnn.readNet(AIConfig.Emotions.PROTOTXT_PATH, AIConfig.Emotions.WEIGHTS_PATH)
 """
 The face detector model (based on FaceNet).
 """
@@ -49,6 +48,7 @@ class EmotionsAnalyzer(BaseVideoAnalyzer[EmotionsResponse]):
     def __init__(self, settings: EmotionsSettings):
         super().__init__(settings.video_settings)
         self._settings = settings
+        self.face_model = cv2.dnn.readNet(AIConfig.Emotions.PROTOTXT_PATH, AIConfig.Emotions.WEIGHTS_PATH)
 
 
     def _reset_state(self) -> None:
@@ -103,8 +103,8 @@ class EmotionsAnalyzer(BaseVideoAnalyzer[EmotionsResponse]):
         blob = cv2.dnn.blobFromImage(frame, 1.0, (224, 224), (104.0, 177.0, 123.0))
         
         # Detect faces in the frame
-        face_model.setInput(blob)
-        detections = face_model.forward()
+        self.face_model.setInput(blob)
+        detections = self.face_model.forward()
 
         # Skip if no faces were detected
         total_detected_faces = detections.shape[2]
