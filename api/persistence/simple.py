@@ -1,49 +1,13 @@
 import json
-import threading
 import os
+import threading
 import uuid
+from api.persistence.base import IObjectStore
 
 
-class IObjectStore:
+class SimpleObjectStore(IObjectStore):
     """
-    Interface for object store.
-    """
-
-    def get_all(self) -> dict:
-        """
-        Returns all data in the store.
-        """
-        raise NotImplementedError
-
-    def get_by_id(self, key: str) -> dict | None:
-        """
-        Returns data by key.
-        """
-        raise NotImplementedError
-
-    def add(self, value: dict) -> str:
-        """
-        Adds data to the store.
-        Returns the key of the added data.
-        """
-        raise NotImplementedError
-
-    def delete(self, key: str) -> None:
-        """
-        Deletes data by key.
-        """
-        raise NotImplementedError
-
-    def clear(self) -> None:
-        """
-        Clears the store.
-        """
-        raise NotImplementedError
-
-
-class LocalObjectStore(IObjectStore):
-    """
-    Thread-safe object store.
+    Simple object store based on JSON file (only for local development).
     """
     
     file_path: str
@@ -71,7 +35,7 @@ class LocalObjectStore(IObjectStore):
             data = self._load_data()
             return data.get(key)
 
-    def add(self, value: dict) -> str:
+    def add(self, value: dict) -> str | None:
         key = self._generate_key()
         with self.lock:
             data = self._load_data()

@@ -4,14 +4,13 @@ from api.common.constants.video import VALID_VIDEO_EXTENSIONS, VideoExtension
 from api.common.exceptions import AppException
 from api.common.utils.file import get_file_extension, remove_file, write_file
 from api.common.utils.os import make_dirs, join_path
-from api.common.persistence import LocalObjectStore
+from api.persistence.factory import get_object_store
 from api.common.utils.video import convert_video, extract_metadata
 from api.models.videos import UploadVideoResponse, VideoMetadata
 from config import AppConfig
 
 
-videos_db = LocalObjectStore(AppConfig.Videos.DB_PATH)
-
+videos_db = get_object_store(AppConfig.Videos.DB_STRATEGY, AppConfig.Videos.DB_PATH)
 
 def _convert_video(src_file_path: str, dst_file_path: str, video_content: bytes) -> None:
     # Save temporal video
@@ -55,6 +54,8 @@ def upload_video(video: UploadFile) -> UploadVideoResponse:
     if video_metadata is None:
         raise AppException("Unable to extract video metadata")
     video_id = videos_db.add(dict(video_metadata))
+    if video_id is None:
+        raise AppException("Unable to save video metadata")
 
     return UploadVideoResponse(
         video_id=video_id
