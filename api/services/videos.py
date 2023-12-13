@@ -2,7 +2,7 @@ import uuid
 from fastapi import UploadFile, status
 from api.common.constants.video import VALID_VIDEO_EXTENSIONS, VideoExtension
 from api.common.exceptions import AppException
-from api.common.utils.file import get_file_extension, remove_file, write_file
+from api.common.utils.file import get_file_extension, remove_dir_contents, remove_file, write_file
 from api.common.utils.os import make_dirs, join_path
 from api.persistence.factory import get_object_store
 from api.common.utils.video import convert_video, extract_metadata
@@ -79,5 +79,5 @@ def delete_video(video_id: str) -> None:
 
 def clear_videos() -> None:
     videos_db.clear()
-    remove_file(AppConfig.Videos.STORAGE_PATH)
-    remove_file(AppConfig.Videos.TEMP_PATH)
+    remove_dir_contents(AppConfig.Videos.STORAGE_PATH)
+    remove_dir_contents(AppConfig.Videos.TEMP_PATH)
