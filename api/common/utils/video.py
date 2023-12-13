@@ -3,11 +3,14 @@ Utilities for video processing.
 """
 
 import math
-from typing import Union
+import logging
 import ffmpeg
+from typing import Union
 from api.common.constants.video import OPTIMAL_SIZE_BY_ASPECT_RATIO, VideoAspectRatio, VideoResolution
 from api.models.videos import VideoMetadata, VideoOptimalSize
 
+
+logger = logging.getLogger(__name__)
 
 def _parse_video_fps(fps: str) -> float:
     """
@@ -108,10 +111,15 @@ def convert_video(
         - crf: The constant rate factor (CRF) value used for the video encoding. The value ranges from `0` to `51`, where `0` is lossless, `23` is the default, and `51` is the worst quality possible. The recommended value is `18`.
         - quiet: Whether to hide the FFmpeg output.
     """
-
     stream = ffmpeg.input(input_path)
     if crf is None:
         stream = stream.output(output_path, r=fps)
     else:
         stream = stream.output(output_path, r=fps, crf=crf)
-    stream.run(quiet=quiet)
+        
+    try:
+        stream.run(quiet=quiet, capture_stderr=True)
+    except ffmpeg.Error as e:
+        logger.error('Error occurred while converting video: %s', e.stderr.decode('utf-8'))
+        raise e
+
