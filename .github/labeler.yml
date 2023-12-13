@@ -1,13 +1,17 @@
 documentation:
-  - '**/*.md'
-  - '**/*.txt'
-  - 'docs/**'
+- changed-files:
+  - any-glob-to-any-file: 
+    - '**/*.md'
+    - '**/*.txt'
+    - 'docs/**'
 
 testing:
-  - 'tests/**'
+- changed-files:
+  - any-glob-to-any-file: 'tests/**'
 
 configuration:
-  - all:
+- changed-files:
+  - any-glob-to-all-files: 
     - '.github/**'
     - '.vscode/**'
     - '.editorconfig'
@@ -18,10 +22,20 @@ configuration:
     - 'docker-compose.yml'
 
 api:
-  - 'api/**'
+- changed-files:
+  - any-glob-to-any-file: 'api/**'
 
 resources:
-  - 'resources/**'
+- changed-files:
+  - any-glob-to-any-file: 'resources/**'
 
 samples:
-  - 'samples/**'
+- changed-files:
+  - any-glob-to-any-file: 'samples/**'
+
+feature:
+ - head-branch: '^feature'
+
+release:
+  - head-branch: '^release'
+  - base-branch: 'main'
