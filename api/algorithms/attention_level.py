@@ -1,3 +1,4 @@
+from typing import Any
 import dlib
 import cv2
 import numpy as np
@@ -8,17 +9,6 @@ from api.algorithms.video_analyzer import BaseVideoAnalyzer
 from api.algorithms.settings.attention_level import AttentionLevelSettings
 from api.common.constants.attention_level import AttentionLevelStatus, FacialLandmarksIndexes
 from api.models.attention_level import AttentionLevelResponse
-
-
-face_detector = dlib.get_frontal_face_detector() # type: ignore
-"""
-Dlib's face detector.
-"""
-
-face_predictor = dlib.shape_predictor(AIConfig.Blinking.SHAPE_PREDICTOR_PATH) # type: ignore
-"""
-Dlib's face landmark predictor.
-"""
 
 
 class AttentionLevelAnalyzer(BaseVideoAnalyzer[AttentionLevelResponse]):
@@ -41,10 +31,22 @@ class AttentionLevelAnalyzer(BaseVideoAnalyzer[AttentionLevelResponse]):
     Flag indicating if the eye is closed.
     """
 
+    _face_detector: Any
+    """
+    Dlib's face detector.
+    """
+
+    _face_predictor: Any
+    """
+    Dlib's face landmark predictor.
+    """
+
 
     def __init__(self, settings: AttentionLevelSettings):
         super().__init__(settings.video_settings)
         self._settings = settings
+        self._face_detector = dlib.get_frontal_face_detector() # type: ignore
+        self._face_predictor = dlib.shape_predictor(AIConfig.Blinking.SHAPE_PREDICTOR_PATH) # type: ignore
 
 
     def _reset_state(self) -> None:
@@ -57,13 +59,13 @@ class AttentionLevelAnalyzer(BaseVideoAnalyzer[AttentionLevelResponse]):
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         # Detect faces in the grayscale frame
-        faces = face_detector(gray, 0)
+        faces = self._face_detector(gray, 0)
         if len(faces) == 0:
             return
         
         # Get the landmarks of the first face
         first_face = faces[0]
-        landmarks = face_predictor(gray, first_face)
+        landmarks = self._face_predictor(gray, first_face)
 
         # Use the coordinates of each eye to compute the eye aspect ratio (EAR)
         left_eye = self.__extract_landmarks(landmarks, FacialLandmarksIndexes.LEFT_EYE)
@@ -71,7 +73,7 @@ class AttentionLevelAnalyzer(BaseVideoAnalyzer[AttentionLevelResponse]):
         avg_ear = np.mean([
             self.__eye_aspect_ratio(left_eye),
             self.__eye_aspect_ratio(right_eye)
-        ])
+        ]) # type: ignore
 
         # If eye aspect ratio is below the blink threshold, the eye is closed
         if avg_ear < self._settings.eye_ratio_threshold:
