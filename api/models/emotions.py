@@ -14,3 +14,15 @@ class EmotionDetail(BaseModel):
 class EmotionsResponse(BaseModel):
     result: list[EmotionDetail] = []
     video_duration: DecimalField 
+
+
+class PartialEmotionsResult(BaseModel):
+    total_confidence_by_emotion: dict[str, float]
+    """
+    The total confidence for each emotion.
+    """
+
+    prediction_count_by_emotion: dict[str, int]
+    """
+    The number of predictions for each emotion.
+    """

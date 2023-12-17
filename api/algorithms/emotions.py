@@ -7,7 +7,7 @@ from keras.models import load_model
 from api.algorithms.video_analyzer import BaseVideoAnalyzer
 from api.algorithms.settings.emotions import EmotionsSettings
 from api.common.constants.emotions import EMOTION_TYPES
-from api.models.emotions import EmotionDetail, EmotionsResponse
+from api.models.emotions import EmotionDetail, EmotionsResponse, PartialEmotionsResult
 from config import AIConfig
 
 
@@ -30,19 +30,14 @@ class EmotionsAnalyzer(BaseVideoAnalyzer[EmotionsResponse]):
     The settings for the analyzer.
     """
 
-    _total_confidence_by_emotion: dict[str, float]
-    """
-    The total confidence for each emotion.
-    """
-
-    _prediction_count_by_emotion: dict[str, int]
-    """
-    The number of predictions for each emotion.
-    """
-
     _face_model: cv2.dnn.Net
     """
     The face detector model (based on FaceNet).
+    """
+
+    _extracted_faces: np.ndarray
+    """
+    The extracted faces from each frame of the video. Only the first face of each frame is extracted.
     """
 
 
@@ -53,35 +48,23 @@ class EmotionsAnalyzer(BaseVideoAnalyzer[EmotionsResponse]):
 
 
     def _reset_state(self) -> None:
-        self._total_confidence_by_emotion = {}
-        self._prediction_count_by_emotion = {}
+        self._extracted_faces = np.array([])
 
 
     def _analyze_frame(self, frame: np.ndarray) -> None:
-        # Predict emotion
-        prediction = self.__predict_emotion(frame)
-        
-        # Skip if no prediction was made
-        if prediction is None:
+        extracted_face = self.__predict_face(frame)
+        if extracted_face is None or extracted_face.size == 0: # Skip if no face was detected
             return
-        
-        for i in range(0, len(prediction)):
-            label = EMOTION_TYPES[i]
-            confidence = prediction[i]
-
-            if label in self._total_confidence_by_emotion:
-                self._total_confidence_by_emotion[label] += confidence
-                self._prediction_count_by_emotion[label] += 1
-            else:
-                self._total_confidence_by_emotion[label] = confidence
-                self._prediction_count_by_emotion[label] = 1    
+        self._extracted_faces = extracted_face if self._extracted_faces.size == 0 \
+            else np.concatenate((self._extracted_faces, extracted_face), axis=0)
     
     
     def _get_final_result(self) -> EmotionsResponse:
         emotions_detail = []
-        for label, total in self._total_confidence_by_emotion.items():
+        partial_result = self.__predict_emotions()
+        for label, total in partial_result.total_confidence_by_emotion.items():
             # Calculate the average confidence
-            count = self._prediction_count_by_emotion[label]
+            count = partial_result.prediction_count_by_emotion[label]
             average = total / count
             emotions_detail.append(EmotionDetail(
                 label=label,
@@ -95,9 +78,9 @@ class EmotionsAnalyzer(BaseVideoAnalyzer[EmotionsResponse]):
         return result
 
 
-    def __predict_emotion(self, frame: np.ndarray) -> np.ndarray | None:
+    def __predict_face(self, frame: np.ndarray) -> np.ndarray | None:
         """
-        Detect faces in the frame and predict the emotion of each face.
+        Detect faces in the frame and extract the first one.
         """
 
         # Convert the frame to a blob
@@ -122,10 +105,7 @@ class EmotionsAnalyzer(BaseVideoAnalyzer[EmotionsResponse]):
         
         # Extract the face from the frame
         face_array = self.__extract_face(frame, first_face)
-
-        # Predict the emotion
-        prediction = emotion_model.predict(face_array, verbose=0)[0] # The prediction is a matrix (only take the first row)
-        return prediction
+        return face_array
 
 
     def __extract_face(self, frame: np.ndarray, face: np.ndarray) -> np.ndarray:
@@ -147,3 +127,32 @@ class EmotionsAnalyzer(BaseVideoAnalyzer[EmotionsResponse]):
         face_array = img_to_array(extracted_face)
         face_array = np.expand_dims(face_array, axis=0)
         return face_array
+    
+
+    def __predict_emotions(self) -> PartialEmotionsResult:
+        """
+        Predict the emotion of all the extracted faces.
+        """
+        
+        partial_result = PartialEmotionsResult(
+            total_confidence_by_emotion={},
+            prediction_count_by_emotion={}
+        )
+        if self._extracted_faces.size == 0:
+            return partial_result
+
+        # Predict emotions
+        predictions = emotion_model.predict(self._extracted_faces, verbose=0)
+       
+        for prediction in predictions:
+            for i in range(0, len(prediction)):
+                label = EMOTION_TYPES[i]
+                confidence = prediction[i]
+                if label in partial_result.total_confidence_by_emotion:
+                    partial_result.total_confidence_by_emotion[label] += confidence
+                    partial_result.prediction_count_by_emotion[label] += 1
+                else:
+                    partial_result.total_confidence_by_emotion[label] = confidence
+                    partial_result.prediction_count_by_emotion[label] = 1
+
+        return partial_result
