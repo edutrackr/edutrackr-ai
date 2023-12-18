@@ -53,7 +53,7 @@ def analyze_unified(video_metadata: VideoMetadata):
     """
     Analyzes all in a video.
     """
-    video_settings = VideoAnalyzerSettings(metadata=video_metadata)
+    video_settings = VideoAnalyzerSettings(metadata=video_metadata, multithreaded=True)
     pipes: PipeDict = {
         "emotions": EmotionsPipe(
             EmotionsSettings(video_settings=video_settings)

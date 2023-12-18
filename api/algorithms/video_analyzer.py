@@ -1,6 +1,7 @@
 from typing import Any
 import cv2
 import numpy as np
+import concurrent.futures
 from api.algorithms.pipes.base import BaseAnalysisPipe
 from api.algorithms.settings.video_analyzer import VideoAnalyzerSettings
 from api.common.utils.os import path_exists
@@ -54,7 +55,7 @@ class VideoAnalyzer:
         """
         Run the analysis on the video. Returns a dictionary with the results (one for each pipe).
         """
-        
+
         # Reset the state of the analyzer
         self._reset()
 
@@ -90,7 +91,10 @@ class VideoAnalyzer:
         video.release()
 
         # Analyze the frames
-        self._analyze()
+        if self._video_settings.multithreaded:
+            self._analyze_multithreaded()
+        else:
+            self._analyze()
 
         # Get the final result
         return self._get_result()
@@ -111,6 +115,17 @@ class VideoAnalyzer:
         """
         for pipe in self._pipes.values():
             pipe.analyze_frames(self._frames)
+
+
+    def _analyze_multithreaded(self) -> None:
+        """
+        Analyze frames from the video in multiple threads.
+        """
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            futures = []
+            for pipe in self._pipes.values():
+                futures.append(executor.submit(pipe.analyze_frames, self._frames))
+            concurrent.futures.wait(futures)
 
 
     def _get_result(self) -> AnalysisResult:

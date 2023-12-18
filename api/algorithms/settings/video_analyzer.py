@@ -8,6 +8,9 @@ class VideoAnalyzerSettings:
     Settings for the video analyzer.
     """
 
+    multithreaded: bool
+    """Flag indicating if the analysis should be run in multiple threads. Helps with performance."""
+
     metadata: VideoMetadata
     """The video metadata."""
     
@@ -21,8 +24,10 @@ class VideoAnalyzerSettings:
         self,
         metadata: VideoMetadata,
         video_resolution: str = VideoResolution.LOW,
-        discarded_frames: int | Literal["auto"] = DEFAULT_DISCARDED_FRAMES_VALUE
+        discarded_frames: int | Literal["auto"] = DEFAULT_DISCARDED_FRAMES_VALUE,
+        multithreaded: bool = False
     ):
         self.metadata = metadata
         self.video_resolution = video_resolution
         self.discarded_frames = discarded_frames
+        self.multithreaded = multithreaded
