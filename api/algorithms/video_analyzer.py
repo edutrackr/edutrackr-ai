@@ -92,12 +92,10 @@ class VideoAnalyzer:
 
         # Analyze the frames
         if self._video_settings.multithreaded:
-            self._analyze_multithreaded()
+            final_result = self._analyze_multithreaded()
         else:
-            self._analyze()
-
-        # Get the final result
-        return self._get_result()
+            final_result = self._analyze()
+        return final_result
 
     
     def _reset(self) -> None:
@@ -109,23 +107,52 @@ class VideoAnalyzer:
             pipe.reset_state()
 
 
-    def _analyze(self) -> None:
+    def _analyze(self) -> AnalysisResult:
         """
         Analyze frames from the video.
         """
-        for pipe in self._pipes.values():
-            pipe.analyze_frames(self._frames)
+        results = {}
+        for pipe_key, pipe_value in self._pipes.items():
+            pipe_key, result = self._analyze_and_get_result(
+                pipe_key, 
+                pipe_value, 
+                self._frames
+            )
+            results[pipe_key] = result
+        return results
 
 
-    def _analyze_multithreaded(self) -> None:
+    def _analyze_multithreaded(self) -> AnalysisResult:
         """
         Analyze frames from the video in multiple threads.
         """
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures = []
-            for pipe in self._pipes.values():
-                futures.append(executor.submit(pipe.analyze_frames, self._frames))
-            concurrent.futures.wait(futures)
+            for pipe_key, pipe_value in self._pipes.items():
+                future = executor.submit(self._analyze_and_get_result, pipe_key, pipe_value, self._frames)
+                futures.append(future)
+            results = {}
+            for future in concurrent.futures.as_completed(futures):
+                future_result = future.result()
+                if future_result is None:
+                    continue
+                pipe_key, result = future_result
+                results[pipe_key] = result
+            return results
+
+
+    def _analyze_and_get_result(
+            self, 
+            pipe_key: str, 
+            pipe_value: BaseAnalysisPipe[Any],
+            frames: list[np.ndarray]
+        ) -> tuple[str, Any]:
+        """
+        Analyze frames from the video and get the final result.
+        """
+        pipe_value.analyze_frames(frames)
+        final_result = pipe_value.get_final_result()
+        return (pipe_key, final_result)
 
 
     def _get_result(self) -> AnalysisResult:

@@ -64,8 +64,8 @@ def analyze_unified(video_metadata: VideoMetadata):
     }
     video_analyzer = VideoAnalyzer(video_settings, pipes)
     video_analysis = video_analyzer.run()
-    emotions_analysis: EmotionsPipeResponse = video_analysis["emotions"]
-    attention_level_analysis: AttentionLevelPipeResponse = video_analysis["attentionLevel"]
+    emotions_analysis: EmotionsPipeResponse | None = video_analysis.get("emotions", None)
+    attention_level_analysis: AttentionLevelPipeResponse | None = video_analysis.get("attentionLevel", None)
     return UnifiedResponse(
         emotions=emotions_analysis,
         attention_level=attention_level_analysis,
