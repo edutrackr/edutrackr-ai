@@ -7,6 +7,7 @@ from api.algorithms.settings.emotions import EmotionsSettings
 from api.algorithms.settings.video_analyzer import VideoAnalyzerSettings
 from api.models.attention_level import AttentionLevelPipeResponse, AttentionLevelResponse
 from api.models.emotions import EmotionsPipeResponse, EmotionsResponse
+from api.models.unified import UnifiedResponse
 from api.models.videos import VideoMetadata
 
 
@@ -45,4 +46,27 @@ def analyze_attention_level(video_metadata: VideoMetadata):
         blinks=attention_level_analysis.blinks,
         level=attention_level_analysis.level,
         video_duration=Decimal(str(video_settings.metadata.duration)),
+    )
+
+
+def analyze_unified(video_metadata: VideoMetadata):
+    """
+    Analyzes all in a video.
+    """
+    video_settings = VideoAnalyzerSettings(metadata=video_metadata)
+    pipes: PipeDict = {
+        "emotions": EmotionsPipe(
+            EmotionsSettings(video_settings=video_settings)
+        ),
+        "attentionLevel": AttentionLevelPipe(
+            AttentionLevelSettings(video_settings=video_settings)
+        )
+    }
+    video_analyzer = VideoAnalyzer(video_settings, pipes)
+    emotions_analysis: EmotionsPipeResponse = video_analyzer.run()["emotions"]
+    attention_level_analysis: AttentionLevelPipeResponse = video_analyzer.run()["attentionLevel"]
+    return UnifiedResponse(
+        emotions=emotions_analysis,
+        attention_level=attention_level_analysis,
+        video_duration=Decimal(str(video_metadata.duration)),   
     )
