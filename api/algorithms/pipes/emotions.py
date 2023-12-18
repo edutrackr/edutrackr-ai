@@ -47,11 +47,11 @@ class EmotionsPipe(BaseAnalysisPipe[EmotionsPipeResponse]):
         self._face_model = cv2.dnn.readNet(AIConfig.Emotions.PROTOTXT_PATH, AIConfig.Emotions.WEIGHTS_PATH)
 
 
-    def _reset_state(self) -> None:
+    def reset_state(self) -> None:
         self._extracted_faces = np.array([])
 
 
-    def analyze_frame(self, frame: np.ndarray) -> None:
+    def _analyze_frame(self, frame: np.ndarray) -> None:
         extracted_face = self.__predict_face(frame)
         if extracted_face is None or extracted_face.size == 0: # Skip if no face was detected
             return

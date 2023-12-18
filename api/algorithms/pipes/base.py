@@ -10,17 +10,25 @@ class BaseAnalysisPipe(Generic[TResult]):
     """
 
     def __init__(self):
-        self._reset_state()
+        pass
 
 
-    def _reset_state(self) -> None:
+    def reset_state(self) -> None:
         """
         Reset the pipe state.
         """
         raise NotImplementedError("Must be implemented in a child class")
 
 
-    def analyze_frame(self, frame: np.ndarray) -> None:
+    def analyze_frames(self, frames: list[np.ndarray]) -> None:
+        """
+        Analyze all the frames.
+        """
+        for frame in frames:
+            self._analyze_frame(frame)
+
+
+    def _analyze_frame(self, frame: np.ndarray) -> None:
         """
         Analyze a frame.
         """

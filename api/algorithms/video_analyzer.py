@@ -37,6 +37,11 @@ class VideoAnalyzer:
     The list of pipes to use in the analysis.
     """
 
+    _frames: list[np.ndarray]
+    """
+    The list of frames to analyze.
+    """
+
 
     def __init__(self, video_settings: VideoAnalyzerSettings, pipes: PipeDict):
         self._video_settings = video_settings
@@ -49,6 +54,9 @@ class VideoAnalyzer:
         """
         Run the analysis on the video. Returns a dictionary with the results (one for each pipe).
         """
+        
+        # Reset the state of the analyzer
+        self._reset()
 
         # Validate the video path
         video_path = self._video_settings.metadata.video_path
@@ -77,15 +85,44 @@ class VideoAnalyzer:
                 self._video_optimal_size.width,
                 self._video_optimal_size.height
             ))
-
-            # Analyze the frame
-            self._analyze(frame)
+            self._frames.append(frame)
 
         video.release()
+
+        # Analyze the frames
+        self._analyze()
+
         # Get the final result
         return self._get_result()
 
     
+    def _reset(self) -> None:
+        """
+        Reset the state of the analyzer.
+        """
+        self._frames = []
+        for pipe in self._pipes.values():
+            pipe.reset_state()
+
+
+    def _analyze(self) -> None:
+        """
+        Analyze frames from the video.
+        """
+        for pipe in self._pipes.values():
+            pipe.analyze_frames(self._frames)
+
+
+    def _get_result(self) -> AnalysisResult:
+        """
+        Get the final result from the analysis.
+        """
+        result = {}
+        for pipe_key, pipe_value in self._pipes.items():
+            result[pipe_key] = pipe_value.get_final_result()        
+        return result
+        
+
     def _calculate_optimal_size(self) -> VideoOptimalSize:
         """
         Calculate the optimal size for the video.
@@ -104,22 +141,3 @@ class VideoAnalyzer:
             return int(self._video_settings.metadata.avg_fps * DEFAULT_DISCARDED_FRAMES_RATE)
         else:
             return self._video_settings.discarded_frames
-
-
-    def _analyze(self, frame: np.ndarray) -> None:
-        """
-        Analyze a frame from the video.
-        """
-        for pipe in self._pipes.values():
-            pipe.analyze_frame(frame)
-
-
-    def _get_result(self) -> AnalysisResult:
-        """
-        Get the final result from the analysis.
-        """
-        result = {}
-        for pipe_key, pipe_value in self._pipes.items():
-            result[pipe_key] = pipe_value.get_final_result()        
-        return result
-        

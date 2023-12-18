@@ -54,12 +54,12 @@ class AttentionLevelPipe(BaseAnalysisPipe[AttentionLevelPipeResponse]):
         self._face_predictor = face_predictor
 
 
-    def _reset_state(self) -> None:
+    def reset_state(self) -> None:
         self._blinks_count = 0
         self._eye_closed = False
 
 
-    def analyze_frame(self, frame: np.ndarray) -> None:
+    def _analyze_frame(self, frame: np.ndarray) -> None:
         # Convert the frame to grayscale
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
