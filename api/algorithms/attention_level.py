@@ -11,6 +11,8 @@ from api.common.constants.attention_level import AttentionLevelStatus, FacialLan
 from api.models.attention_level import AttentionLevelResponse
 
 
+face_predictor = dlib.shape_predictor(AIConfig.AttentionLevel.FACE_LANDMARKS_PATH) # type: ignore
+
 class AttentionLevelAnalyzer(BaseVideoAnalyzer[AttentionLevelResponse]):
     """
     Analyzer for the attention level algorithm.
@@ -46,7 +48,7 @@ class AttentionLevelAnalyzer(BaseVideoAnalyzer[AttentionLevelResponse]):
         super().__init__(settings.video_settings)
         self._settings = settings
         self._face_detector = dlib.get_frontal_face_detector() # type: ignore
-        self._face_predictor = dlib.shape_predictor(AIConfig.Blinking.SHAPE_PREDICTOR_PATH) # type: ignore
+        self._face_predictor = face_predictor
 
 
     def _reset_state(self) -> None:
