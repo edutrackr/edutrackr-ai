@@ -11,6 +11,10 @@ class EmotionDetail(BaseModel):
     confidence: DecimalField
 
 
+class EmotionsPipeResponse(BaseModel):
+    result: list[EmotionDetail] = []
+
+
 class EmotionsResponse(BaseModel):
     result: list[EmotionDetail] = []
     video_duration: DecimalField 

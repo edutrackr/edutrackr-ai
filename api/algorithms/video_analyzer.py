@@ -1,6 +1,7 @@
+from typing import Any
 import cv2
 import numpy as np
-from typing import Generic, TypeVar
+from api.algorithms.pipes.base import BaseAnalysisPipe
 from api.algorithms.settings.video_analyzer import VideoAnalyzerSettings
 from api.common.utils.os import path_exists
 from api.common.constants.video import DEFAULT_DISCARDED_FRAMES_RATE, DEFAULT_DISCARDED_FRAMES_VALUE
@@ -8,9 +9,10 @@ from api.common.utils.video import calculate_optimal_size
 from api.models.videos import VideoOptimalSize
 
 
-TResult = TypeVar("TResult")
+PipeDict = dict[str, BaseAnalysisPipe[Any]]
+AnalysisResult = dict[str, Any]
 
-class BaseVideoAnalyzer(Generic[TResult]):
+class VideoAnalyzer:
     """
     Base class for AI video analyzers.
     """
@@ -30,15 +32,22 @@ class BaseVideoAnalyzer(Generic[TResult]):
     The number of frames to discard.
     """
 
-    def __init__(self, video_settings: VideoAnalyzerSettings):
+    _pipes: PipeDict
+    """
+    The list of pipes to use in the analysis.
+    """
+
+
+    def __init__(self, video_settings: VideoAnalyzerSettings, pipes: PipeDict):
         self._video_settings = video_settings
         self._video_optimal_size = self._calculate_optimal_size()
         self._discarded_frames = self._calculate_discarded_frames()
+        self._pipes = pipes
 
 
-    def run(self) -> TResult:
+    def run(self) -> AnalysisResult:
         """
-        Run the analysis on the video.
+        Run the analysis on the video. Returns a dictionary with the results (one for each pipe).
         """
 
         # Validate the video path
@@ -50,7 +59,6 @@ class BaseVideoAnalyzer(Generic[TResult]):
         video = cv2.VideoCapture(video_path)
 
         skipped_frames = 0
-        self._reset_state()
         while video.isOpened():
             # Read each frame from the video
             is_processing, frame = video.read()
@@ -71,11 +79,11 @@ class BaseVideoAnalyzer(Generic[TResult]):
             ))
 
             # Analyze the frame
-            self._analyze_frame(frame)
+            self._analyze(frame)
 
         video.release()
         # Get the final result
-        return self._get_final_result()
+        return self._get_result()
 
     
     def _calculate_optimal_size(self) -> VideoOptimalSize:
@@ -98,22 +106,20 @@ class BaseVideoAnalyzer(Generic[TResult]):
             return self._video_settings.discarded_frames
 
 
-    def _reset_state(self) -> None:
-        """
-        Reset the analyzer state.
-        """
-        raise NotImplementedError("Must be implemented in a child class")
-
-
-    def _analyze_frame(self, frame: np.ndarray) -> None:
+    def _analyze(self, frame: np.ndarray) -> None:
         """
         Analyze a frame from the video.
         """
-        raise NotImplementedError("Must be implemented in a child class")
+        for pipe in self._pipes.values():
+            pipe.analyze_frame(frame)
 
 
-    def _get_final_result(self) -> TResult:
+    def _get_result(self) -> AnalysisResult:
         """
         Get the final result from the analysis.
         """
-        raise NotImplementedError("Must be implemented in a child class")
+        result = {}
+        for pipe_key, pipe_value in self._pipes.items():
+            result[pipe_key] = pipe_value.get_final_result()        
+        return result
+        

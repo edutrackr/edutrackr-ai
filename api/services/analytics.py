@@ -1,8 +1,12 @@
-from api.algorithms.attention_level import AttentionLevelAnalyzer
-from api.algorithms.emotions import EmotionsAnalyzer
+from decimal import Decimal
+from api.algorithms.pipes.attention_level import AttentionLevelPipe
+from api.algorithms.pipes.emotions import EmotionsPipe
+from api.algorithms.video_analyzer import PipeDict, VideoAnalyzer
 from api.algorithms.settings.attention_level import AttentionLevelSettings
 from api.algorithms.settings.emotions import EmotionsSettings
 from api.algorithms.settings.video_analyzer import VideoAnalyzerSettings
+from api.models.attention_level import AttentionLevelPipeResponse, AttentionLevelResponse
+from api.models.emotions import EmotionsPipeResponse, EmotionsResponse
 from api.models.videos import VideoMetadata
 
 
@@ -10,19 +14,35 @@ def analyze_emotions(video_metadata: VideoMetadata):
     """
     Analyzes the emotions in a video.
     """
-    settings = EmotionsSettings(
-        video_settings=VideoAnalyzerSettings(metadata=video_metadata)
+    video_settings = VideoAnalyzerSettings(metadata=video_metadata)
+    pipes: PipeDict = {
+        "emotions": EmotionsPipe(
+            EmotionsSettings(video_settings=video_settings)
+        )
+    }
+    video_analyzer = VideoAnalyzer(video_settings, pipes)
+    emotions_analysis: EmotionsPipeResponse = video_analyzer.run()["emotions"]
+    return EmotionsResponse(
+        result=emotions_analysis.result,
+        video_duration=Decimal(str(video_settings.metadata.duration)),
     )
-    emotions_analyzer = EmotionsAnalyzer(settings)
-    return emotions_analyzer.run()
     
 
 def analyze_attention_level(video_metadata: VideoMetadata):
     """
     Analyzes the attention level in a video.
     """
-    settings = AttentionLevelSettings(
-        video_settings=VideoAnalyzerSettings(metadata=video_metadata)
+    video_settings = VideoAnalyzerSettings(metadata=video_metadata)
+    pipes: PipeDict = {
+        "attentionLevel": AttentionLevelPipe(
+            AttentionLevelSettings(video_settings=video_settings)
+        )
+    }
+    video_analyzer = VideoAnalyzer(video_settings, pipes)
+    attention_level_analysis: AttentionLevelPipeResponse = video_analyzer.run()["attentionLevel"]
+    return AttentionLevelResponse(
+        blink_rate=attention_level_analysis.blink_rate,
+        blinks=attention_level_analysis.blinks,
+        level=attention_level_analysis.level,
+        video_duration=Decimal(str(video_settings.metadata.duration)),
     )
-    attention_level_analyzer = AttentionLevelAnalyzer(settings)
-    return attention_level_analyzer.run()

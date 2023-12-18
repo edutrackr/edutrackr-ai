@@ -6,6 +6,11 @@ class AttentionLevelRequest(BaseModel):
     video_id: str
 
 
+class AttentionLevelPipeResponse(BaseModel):
+    blinks: int
+    blink_rate: DecimalField
+    level: str
+
 class AttentionLevelResponse(BaseModel):
     blinks: int
     blink_rate: DecimalField
