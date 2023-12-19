@@ -5,7 +5,7 @@ from api.common.exceptions import AppException
 from api.common.utils.file import get_file_extension, remove_dir_contents, remove_file, write_file
 from api.common.utils.os import make_dirs, join_path
 from api.persistence.factory import get_object_store
-from api.common.utils.video import convert_video, extract_metadata, extract_stream_metadata
+from api.common.utils.video import calculate_stream_duration, convert_video, extract_metadata, extract_stream_metadata
 from api.models.videos import UploadVideoResponse, FullVideoMetadata
 from config import AppConfig
 
@@ -22,25 +22,20 @@ def _convert_video(src_file_path: str, dst_file_path: str, video_content: bytes)
     remove_file(src_file_path)
 
 
-def _get_stream_metadata(dst_file_path: str, tmp_file_path: str) -> FullVideoMetadata | None:
-    # Convert video
-    convert_video(dst_file_path, tmp_file_path, crf=50, quiet=AppConfig.IS_DEV)
-    # Extract destination video metadata
+def _get_stream_metadata(dst_file_path: str) -> FullVideoMetadata | None:
+    # Extract video metadata
     dst_video_metadata = extract_stream_metadata(dst_file_path)
-    # Extract temporal video metadata
-    tmp_video_metadata = extract_metadata(tmp_file_path)
-    # Remove temporal video
-    remove_file(tmp_file_path)
+    duration = calculate_stream_duration(dst_file_path)
 
-    if dst_video_metadata is None or tmp_video_metadata is None:
+    if dst_video_metadata is None or duration == 0:
         return None
     
-    avg_fps = round(dst_video_metadata.frame_count / tmp_video_metadata.duration, 2)
+    avg_fps = round(dst_video_metadata.frame_count / duration, 2)
     return FullVideoMetadata(
         video_path=dst_file_path,
         avg_fps=avg_fps,
         frame_count=dst_video_metadata.frame_count,
-        duration=tmp_video_metadata.duration,
+        duration=duration,
         width=dst_video_metadata.width,
         height=dst_video_metadata.height,
         aspect_ratio=dst_video_metadata.aspect_ratio
@@ -80,11 +75,7 @@ def upload_video(video: UploadFile, convert_video: bool) -> UploadVideoResponse:
 
     # Save video metadata
     if dst_file_extension == VideoExtension.WEBM:
-        tmp_file_path = join_path(
-            AppConfig.Videos.TEMP_PATH, 
-            f"{file_name}{VideoExtension.MP4}"
-        )
-        video_metadata = _get_stream_metadata(dst_file_path, tmp_file_path)
+        video_metadata = _get_stream_metadata(dst_file_path)
     else:
         video_metadata = extract_metadata(dst_file_path)
     if video_metadata is None:

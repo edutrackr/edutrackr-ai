@@ -4,6 +4,7 @@ Utilities for video processing.
 
 import math
 import logging
+import subprocess
 import ffmpeg
 from typing import Union
 from api.common.constants.video import OPTIMAL_SIZE_BY_ASPECT_RATIO, VideoAspectRatio, VideoResolution
@@ -162,3 +163,43 @@ def convert_video(
         logger.error('Error occurred while converting video: %s', e.stderr.decode('utf-8'))
         raise e
 
+
+def calculate_stream_duration(path: str) -> float:
+    """
+    Calculate the duration of a video stream.
+
+    Parameters:
+        - path: The path to the video file.
+    """
+    try:
+        duration = duration_probe(path)
+    except ffmpeg.Error as e:
+        logger.error('Error occurred while extracting video duration: %s', e.stderr.decode('utf-8'))
+        raise e
+    return round(duration, 2)
+
+
+def duration_probe(filename, cmd='ffprobe') -> float:
+    """
+    Run ffprobe on a file and return the output as a string (duration).
+    """
+    
+    # ffprobe -v 0 -of compact=p=0:nk=1 -show_entries packet=pts_time -read_intervals 99999%+#1000 recorded-video.webm
+    args = [
+        cmd,
+        '-v', '0',
+        '-of', 'compact=p=0:nk=1',
+        '-show_entries', 'packet=pts_time',
+        '-read_intervals', '99999%+#1000',
+    ]
+    args += [filename]
+
+    p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out, err = p.communicate()
+    if p.returncode != 0:
+        raise ffmpeg.Error('ffprobe', out, err)
+    try:
+        duration = float(out.decode('utf-8').strip().split('\n')[-1])
+        return duration
+    except ValueError:
+        return 0.0

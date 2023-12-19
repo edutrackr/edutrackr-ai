@@ -45,5 +45,5 @@ DEFAULT_DISCARDED_FRAMES_VALUE = "auto"
 DEFAULT_DISCARDED_FRAMES_RATE = 0.1
 """The sample rate should not be higher than 10% of FPS to avoid loosing analysis quality."""
 
-CONVERT_VIDEO = True
+CONVERT_VIDEO = False
 """Whether to convert the video or not."""
