@@ -1,6 +1,7 @@
 from typing import Any
 import cv2
 import numpy as np
+from vidgear.gears import VideoGear
 import concurrent.futures
 from api.algorithms.pipes.base import BaseAnalysisPipe
 from api.algorithms.settings.video_analyzer import VideoAnalyzerSettings
@@ -65,13 +66,14 @@ class VideoAnalyzer:
             raise FileNotFoundError(f"File not found: '{video_path}'")
 
         # Initialize the video capture object
-        video = cv2.VideoCapture(video_path)
+        video = VideoGear(source=video_path) # type: ignore
+        stream = video.start() 
 
         skipped_frames = 0
-        while video.isOpened():
+        while True:
             # Read each frame from the video
-            is_processing, frame = video.read()
-            if not is_processing:
+            frame = stream.read()
+            if frame is None:
                 break
 
             # Validate skipped frames
@@ -88,7 +90,7 @@ class VideoAnalyzer:
             ))
             self._frames.append(frame)
 
-        video.release()
+        stream.stop()
 
         # Analyze the frames
         if self._video_settings.multithreaded:
