@@ -39,7 +39,11 @@ def extract_metadata(path: str) -> VideoMetadata | None:
         - path: The path to the video file.
     """
 
-    probe = ffmpeg.probe(path)
+    try:
+        probe = ffmpeg.probe(path, count_frames=None)
+    except ffmpeg.Error as e:
+        logger.error('Error occurred while extracting metadata video: %s', e.stderr.decode('utf-8'))
+        raise e
     raw_metadata = next((stream for stream in probe['streams'] if stream['codec_type'] == 'video'), None)
 
     if raw_metadata is None:
