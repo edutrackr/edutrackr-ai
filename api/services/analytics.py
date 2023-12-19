@@ -8,10 +8,10 @@ from api.algorithms.settings.video_analyzer import VideoAnalyzerSettings
 from api.models.attention_level import AttentionLevelPipeResponse, AttentionLevelResponse
 from api.models.emotions import EmotionsPipeResponse, EmotionsResponse
 from api.models.unified import UnifiedResponse
-from api.models.videos import VideoMetadata
+from api.models.videos import FullVideoMetadata
 
 
-def analyze_emotions(video_metadata: VideoMetadata):
+def analyze_emotions(video_metadata: FullVideoMetadata):
     """
     Analyzes the emotions in a video.
     """
@@ -29,7 +29,7 @@ def analyze_emotions(video_metadata: VideoMetadata):
     )
     
 
-def analyze_attention_level(video_metadata: VideoMetadata):
+def analyze_attention_level(video_metadata: FullVideoMetadata):
     """
     Analyzes the attention level in a video.
     """
@@ -49,7 +49,7 @@ def analyze_attention_level(video_metadata: VideoMetadata):
     )
 
 
-def analyze_unified(video_metadata: VideoMetadata):
+def analyze_unified(video_metadata: FullVideoMetadata):
     """
     Analyzes all in a video.
     """

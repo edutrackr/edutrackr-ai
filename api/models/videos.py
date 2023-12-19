@@ -11,19 +11,13 @@ class DeleteVideoRequest(BaseModel):
     video_id: str
 
 
-class VideoMetadata(BaseModel):
+class BaseVideoMetadata(BaseModel):
 
     video_path: str
     """Path to the video."""
 
-    avg_fps: float
-    """Average FPS of the video (rounded to 2 decimal places)."""
-
     frame_count: int
     """Number of frames in the video."""
-
-    duration: float
-    """Duration of the video in seconds (rounded to 2 decimal places)."""
 
     width: int
     """Original width of the video in pixels."""
@@ -33,6 +27,15 @@ class VideoMetadata(BaseModel):
 
     aspect_ratio: str
     """Aspect ratio of the video in the format of "width:height" (e.g. "16:9")."""
+
+
+class FullVideoMetadata(BaseVideoMetadata):
+
+    avg_fps: float
+    """Average FPS of the video (rounded to 2 decimal places)."""
+
+    duration: float
+    """Duration of the video in seconds (rounded to 2 decimal places)."""
 
 
 class VideoOptimalSize(BaseModel):

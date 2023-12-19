@@ -1,4 +1,5 @@
 from fastapi import APIRouter, UploadFile
+from api.common.constants.video import CONVERT_VIDEO
 from api.common.exceptions import AppException
 from api.models.base import BaseResponse, EmptyResponse
 from api.models.videos import DeleteVideoRequest, UploadVideoResponse
@@ -10,7 +11,7 @@ router = APIRouter(prefix="/videos", tags=["Videos"])
 @router.post("/upload")
 def upload(video: UploadFile) -> BaseResponse[UploadVideoResponse]:
     try:
-        result = upload_video(video)
+        result = upload_video(video, CONVERT_VIDEO)
         return BaseResponse(
             success=True, 
             message="Video uploaded successfully",

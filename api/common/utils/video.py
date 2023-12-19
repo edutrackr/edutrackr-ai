@@ -7,7 +7,7 @@ import logging
 import ffmpeg
 from typing import Union
 from api.common.constants.video import OPTIMAL_SIZE_BY_ASPECT_RATIO, VideoAspectRatio, VideoResolution
-from api.models.videos import VideoMetadata, VideoOptimalSize
+from api.models.videos import BaseVideoMetadata, FullVideoMetadata, VideoOptimalSize
 
 
 logger = logging.getLogger(__name__)
@@ -30,8 +30,43 @@ def _calculate_aspect_ratio(width: int, height: int) -> str:
     gcd = math.gcd(width, height)
     return f"{width // gcd}:{height // gcd}"
 
-     
-def extract_metadata(path: str) -> VideoMetadata | None:
+
+def extract_stream_metadata(path: str) -> BaseVideoMetadata | None:
+    """
+    Extract the metadata of a video stream using FFmpeg.
+
+    Parameters:
+        - path: The path to the video file.
+    """
+    
+    try:
+        probe = ffmpeg.probe(path, count_frames=None)
+    except ffmpeg.Error as e:
+        logger.error('Error occurred while extracting video metadata: %s', e.stderr.decode('utf-8'))
+        raise e
+    raw_metadata = next((stream for stream in probe['streams'] if stream['codec_type'] == 'video'), None)
+
+    if raw_metadata is None:
+        return None
+
+    frame_count = int(raw_metadata['nb_read_frames'])
+    width = int(raw_metadata['width'])
+    height = int(raw_metadata['height'])
+    aspect_ratio = raw_metadata['display_aspect_ratio'] \
+        if 'display_aspect_ratio' in raw_metadata \
+        else _calculate_aspect_ratio(width, height)
+    
+    video_metadata = BaseVideoMetadata(
+        video_path=path,
+        frame_count=frame_count,
+        width=width,
+        height=height,
+        aspect_ratio=aspect_ratio
+    )
+    return video_metadata
+
+
+def extract_metadata(path: str) -> FullVideoMetadata | None:
     """
     Extract the metadata of a video using FFmpeg.
 
@@ -40,9 +75,9 @@ def extract_metadata(path: str) -> VideoMetadata | None:
     """
 
     try:
-        probe = ffmpeg.probe(path, count_frames=None)
+        probe = ffmpeg.probe(path)
     except ffmpeg.Error as e:
-        logger.error('Error occurred while extracting metadata video: %s', e.stderr.decode('utf-8'))
+        logger.error('Error occurred while extracting video metadata: %s', e.stderr.decode('utf-8'))
         raise e
     raw_metadata = next((stream for stream in probe['streams'] if stream['codec_type'] == 'video'), None)
 
@@ -58,7 +93,7 @@ def extract_metadata(path: str) -> VideoMetadata | None:
         if 'display_aspect_ratio' in raw_metadata \
         else _calculate_aspect_ratio(width, height)
     
-    video_metadata = VideoMetadata(
+    video_metadata = FullVideoMetadata(
         video_path=path,
         avg_fps=round(avg_fps, 2),
         frame_count=frame_count,
@@ -70,7 +105,7 @@ def extract_metadata(path: str) -> VideoMetadata | None:
     return video_metadata
 
 
-def calculate_optimal_size(video_metadata: VideoMetadata, resolution: str) -> VideoOptimalSize:
+def calculate_optimal_size(video_metadata: FullVideoMetadata, resolution: str) -> VideoOptimalSize:
     """
     Determine the new optimal width and height of the video based on its aspect ratio.
 
