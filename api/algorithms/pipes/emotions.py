@@ -4,10 +4,10 @@ import numpy as np
 from decimal import Decimal
 from keras.preprocessing.image import img_to_array
 from keras.models import load_model
-from api.algorithms.video_analyzer import BaseVideoAnalyzer
+from api.algorithms.pipes.base import BaseAnalysisPipe
 from api.algorithms.settings.emotions import EmotionsSettings
 from api.common.constants.emotions import EMOTION_TYPES
-from api.models.emotions import EmotionDetail, EmotionsResponse, PartialEmotionsResult
+from api.models.emotions import EmotionDetail, EmotionsPipeResponse, PartialEmotionsResult
 from config import AIConfig
 
 
@@ -20,14 +20,14 @@ The emotion classification model.
 """
 
 
-class EmotionsAnalyzer(BaseVideoAnalyzer[EmotionsResponse]):
+class EmotionsPipe(BaseAnalysisPipe[EmotionsPipeResponse]):
     """
-    Analyzer for the emotions algorithm.
+    Pipe for the emotions algorithm.
     """
     
     _settings: EmotionsSettings
     """
-    The settings for the analyzer.
+    The settings for the pipe.
     """
 
     _face_model: cv2.dnn.Net
@@ -42,12 +42,12 @@ class EmotionsAnalyzer(BaseVideoAnalyzer[EmotionsResponse]):
 
 
     def __init__(self, settings: EmotionsSettings):
-        super().__init__(settings.video_settings)
+        super().__init__()
         self._settings = settings
         self._face_model = cv2.dnn.readNet(AIConfig.Emotions.PROTOTXT_PATH, AIConfig.Emotions.WEIGHTS_PATH)
 
 
-    def _reset_state(self) -> None:
+    def reset_state(self) -> None:
         self._extracted_faces = np.array([])
 
 
@@ -59,7 +59,7 @@ class EmotionsAnalyzer(BaseVideoAnalyzer[EmotionsResponse]):
             else np.concatenate((self._extracted_faces, extracted_face), axis=0)
     
     
-    def _get_final_result(self) -> EmotionsResponse:
+    def get_final_result(self) -> EmotionsPipeResponse:
         emotions_detail = []
         partial_result = self.__predict_emotions()
         for label, total in partial_result.total_confidence_by_emotion.items():
@@ -70,10 +70,8 @@ class EmotionsAnalyzer(BaseVideoAnalyzer[EmotionsResponse]):
                 label=label,
                 confidence=Decimal(f"{average:.3f}")
             ))
-        duration = self._video_settings.metadata.duration
-        result = EmotionsResponse(
+        result = EmotionsPipeResponse(
             result=emotions_detail,
-            video_duration=Decimal(str(duration))
         )
         return result
 
