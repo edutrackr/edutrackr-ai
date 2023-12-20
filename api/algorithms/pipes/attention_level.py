@@ -1,34 +1,39 @@
+from typing import Any
 import dlib
 import cv2
 import numpy as np
 from decimal import Decimal
+from api.algorithms.pipes.base import BaseAnalysisPipe
 from config import AIConfig
 from api.algorithms.eye_aspect_ratio import optimized_ear, original_ear
-from api.algorithms.video_analyzer import BaseVideoAnalyzer
 from api.algorithms.settings.attention_level import AttentionLevelSettings
 from api.common.constants.attention_level import AttentionLevelStatus, FacialLandmarksIndexes
-from api.models.attention_level import AttentionLevelResponse
+from api.models.attention_level import AttentionLevelPipeResponse
 
 
-face_detector = dlib.get_frontal_face_detector() # type: ignore
-"""
-Dlib's face detector.
-"""
-
-face_predictor = dlib.shape_predictor(AIConfig.Blinking.SHAPE_PREDICTOR_PATH) # type: ignore
+face_predictor = dlib.shape_predictor(AIConfig.Blinking.SHAPE_PREDICTOR_PATH)  # type: ignore
 """
 Dlib's face landmark predictor.
 """
 
-
-class AttentionLevelAnalyzer(BaseVideoAnalyzer[AttentionLevelResponse]):
+class AttentionLevelPipe(BaseAnalysisPipe[AttentionLevelPipeResponse]):
     """
-    Analyzer for the attention level algorithm.
+    Pipe for the attention level algorithm.
     """
     
     _settings: AttentionLevelSettings
     """
-    The settings for the analyzer.
+    The settings for the pipe.
+    """
+
+    _face_detector: Any
+    """
+    Dlib's face detector.
+    """
+
+    _face_predictor: Any
+    """
+    Dlib's face landmark predictor.
     """
 
     _blinks_count: int
@@ -43,11 +48,13 @@ class AttentionLevelAnalyzer(BaseVideoAnalyzer[AttentionLevelResponse]):
 
 
     def __init__(self, settings: AttentionLevelSettings):
-        super().__init__(settings.video_settings)
+        super().__init__()
         self._settings = settings
+        self._face_detector = dlib.get_frontal_face_detector() # type: ignore
+        self._face_predictor = face_predictor
 
 
-    def _reset_state(self) -> None:
+    def reset_state(self) -> None:
         self._blinks_count = 0
         self._eye_closed = False
 
@@ -57,13 +64,13 @@ class AttentionLevelAnalyzer(BaseVideoAnalyzer[AttentionLevelResponse]):
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         # Detect faces in the grayscale frame
-        faces = face_detector(gray, 0)
+        faces = self._face_detector(gray, 0)
         if len(faces) == 0:
             return
         
         # Get the landmarks of the first face
         first_face = faces[0]
-        landmarks = face_predictor(gray, first_face)
+        landmarks = self._face_predictor(gray, first_face)
 
         # Use the coordinates of each eye to compute the eye aspect ratio (EAR)
         left_eye = self.__extract_landmarks(landmarks, FacialLandmarksIndexes.LEFT_EYE)
@@ -71,7 +78,7 @@ class AttentionLevelAnalyzer(BaseVideoAnalyzer[AttentionLevelResponse]):
         avg_ear = np.mean([
             self.__eye_aspect_ratio(left_eye),
             self.__eye_aspect_ratio(right_eye)
-        ])
+        ]) # type: ignore
 
         # If eye aspect ratio is below the blink threshold, the eye is closed
         if avg_ear < self._settings.eye_ratio_threshold:
@@ -84,14 +91,13 @@ class AttentionLevelAnalyzer(BaseVideoAnalyzer[AttentionLevelResponse]):
             self._eye_closed = False
 
 
-    def _get_final_result(self) -> AttentionLevelResponse:
-        duration = self._video_settings.metadata.duration
+    def get_final_result(self) -> AttentionLevelPipeResponse:
+        duration = self._settings.video_settings.metadata.duration
         blink_rate = self._blinks_count / duration * 60 # Blinks per minute
-        result = AttentionLevelResponse(
+        result = AttentionLevelPipeResponse(
             blinks=self._blinks_count,
             blink_rate=Decimal(f"{blink_rate:.3f}"),
             level=self.__calculate_attention_level(blink_rate),
-            video_duration=Decimal(str(duration))
         )
         return result
 

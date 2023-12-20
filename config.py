@@ -2,6 +2,7 @@ import os
 import sys
 import logging.config
 from dotenv import load_dotenv
+from api.common.constants.persistence import DB_EXTENSION_BY_STRATEGY, PersistenceStrategy
 from api.common.constants.runtime import Environment, RuntimeArgs
 from api.common.utils.os import get_env, join_path
 from api.common.utils.runtime import has_arg
@@ -19,6 +20,8 @@ logging.config.fileConfig("logging.conf", disable_existing_loggers=False)
 logging.getLogger('watchfiles').setLevel(logging.WARNING)
 
 BASE_STORAGE_PATH = get_env(Environment.STORAGE_PATH, os.path.join(os.getcwd(), ".storage"))
+BASE_DB_STRATEGY = PersistenceStrategy.SQLITE
+BASE_DB_EXTENSION = DB_EXTENSION_BY_STRATEGY[BASE_DB_STRATEGY]
 
 class AppConfig:
     IS_DEV = IS_DEV
@@ -27,7 +30,8 @@ class AppConfig:
     class Videos:
         TEMP_PATH = join_path(BASE_STORAGE_PATH, "temp")
         STORAGE_PATH = join_path(BASE_STORAGE_PATH, "videos")
-        DB_PATH = join_path(BASE_STORAGE_PATH, "videos.json")
+        DB_STRATEGY = BASE_DB_STRATEGY
+        DB_PATH = join_path(BASE_STORAGE_PATH, f"videos{BASE_DB_EXTENSION}")
 
     class Swagger:
         TITLE = "Edutrackr AI"

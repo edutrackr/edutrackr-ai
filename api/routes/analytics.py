@@ -1,8 +1,9 @@
 from fastapi import APIRouter, status
 from api.common.exceptions import AppException
 from api.models.base import BaseResponse
+from api.models.unified import UnifiedRequest, UnifiedResponse
 from api.services.videos import get_video_metadata
-from api.services.analytics import analyze_emotions, analyze_attention_level
+from api.services.analytics import analyze_emotions, analyze_attention_level, analyze_unified
 from api.models.attention_level import AttentionLevelRequest, AttentionLevelResponse
 from api.models.emotions import EmotionsRequest, EmotionsResponse
 
@@ -34,6 +35,24 @@ def blinks(request: AttentionLevelRequest) -> BaseResponse[AttentionLevelRespons
         if video_metadata is None:
             raise AppException("Video not found", status_code=status.HTTP_404_NOT_FOUND)
         result = analyze_attention_level(video_metadata)
+        return BaseResponse(
+            success=True, 
+            message="Attention level analyzed successfully",
+            data=result
+        )
+    except AppException as e:
+        raise e
+    except Exception as e:
+        raise AppException(str(e))
+
+
+@router.post("/unified")
+def unified(request: UnifiedRequest) -> BaseResponse[UnifiedResponse]:
+    try:
+        video_metadata = get_video_metadata(request.video_id)
+        if video_metadata is None:
+            raise AppException("Video not found", status_code=status.HTTP_404_NOT_FOUND)
+        result = analyze_unified(video_metadata)
         return BaseResponse(
             success=True, 
             message="Attention level analyzed successfully",

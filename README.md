@@ -58,6 +58,26 @@ python main.py
 
 > To open the API documentation, go to `http://<base_url>/docs`.
 
+## Docker
+
+### Build
+
+To build the Docker image, run the following command:
+
+```bash
+docker build -t edutrack-ai .
+```
+
+### Run
+
+To run the Docker image, run the following command:
+
+```bash
+docker run -d -e PORT=8000 -e API_KEY=<YOUR_API_KEY> --name edutrack-ai -p 8000:8000 edutrack-ai
+```
+
+> Change the port number if necessary.
+
 ## Samples
 
 To run any AI sample, just run the following command:
