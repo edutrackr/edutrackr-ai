@@ -60,6 +60,31 @@ class VideoAnalyzer:
         # Reset the state of the analyzer
         self._reset()
 
+        # Extract the frames from the video
+        self._extract_frames()
+
+        # Analyze the frames
+        if self._video_settings.multithreaded:
+            final_result = self._analyze_multithreaded()
+        else:
+            final_result = self._analyze()
+        return final_result
+
+    
+    def _reset(self) -> None:
+        """
+        Reset the state of the analyzer.
+        """
+        self._frames = []
+        for pipe in self._pipes.values():
+            pipe.reset_state()
+
+
+    def _extract_frames(self) -> None:
+        """
+        Extract frames from the video.
+        """
+
         # Validate the video path
         video_path = self._video_settings.metadata.video_path
         if not path_exists(video_path):
@@ -91,22 +116,6 @@ class VideoAnalyzer:
             self._frames.append(frame)
 
         stream.stop()
-
-        # Analyze the frames
-        if self._video_settings.multithreaded:
-            final_result = self._analyze_multithreaded()
-        else:
-            final_result = self._analyze()
-        return final_result
-
-    
-    def _reset(self) -> None:
-        """
-        Reset the state of the analyzer.
-        """
-        self._frames = []
-        for pipe in self._pipes.values():
-            pipe.reset_state()
 
 
     def _analyze(self) -> AnalysisResult:
