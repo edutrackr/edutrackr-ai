@@ -1,6 +1,6 @@
 from typing import Literal
 from api.common.constants.video import DEFAULT_DISCARDED_FRAMES_VALUE, VideoResolution
-from api.models.videos import VideoMetadata
+from api.models.videos import FullVideoMetadata
 
 
 class VideoAnalyzerSettings:
@@ -8,7 +8,10 @@ class VideoAnalyzerSettings:
     Settings for the video analyzer.
     """
 
-    metadata: VideoMetadata
+    multithreaded: bool
+    """Flag indicating if the analysis should be run in multiple threads. Helps with performance."""
+
+    metadata: FullVideoMetadata
     """The video metadata."""
     
     video_resolution: str
@@ -19,10 +22,12 @@ class VideoAnalyzerSettings:
 
     def __init__(
         self,
-        metadata: VideoMetadata,
+        metadata: FullVideoMetadata,
         video_resolution: str = VideoResolution.LOW,
-        discarded_frames: int | Literal["auto"] = DEFAULT_DISCARDED_FRAMES_VALUE
+        discarded_frames: int | Literal["auto"] = DEFAULT_DISCARDED_FRAMES_VALUE,
+        multithreaded: bool = False
     ):
         self.metadata = metadata
         self.video_resolution = video_resolution
         self.discarded_frames = discarded_frames
+        self.multithreaded = multithreaded

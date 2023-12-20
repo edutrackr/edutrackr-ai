@@ -48,6 +48,7 @@ if __name__ == "__main__":
     reload = AppConfig.IS_DEV and has_arg(RuntimeArgs.WATCH_MODE)
     uvicorn.run(
         'main:app',
+        host="0.0.0.0",
         port=AppConfig.PORT, 
         reload=reload,
     )
