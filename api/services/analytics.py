@@ -1,10 +1,12 @@
 from decimal import Decimal
+from fastapi import status
 from api.algorithms.pipes.attention_level import AttentionLevelPipe
 from api.algorithms.pipes.emotions import EmotionsPipe
 from api.algorithms.video_analyzer import PipeDict, VideoAnalyzer
 from api.algorithms.settings.attention_level import AttentionLevelSettings
 from api.algorithms.settings.emotions import EmotionsSettings
 from api.algorithms.settings.video_analyzer import VideoAnalyzerSettings
+from api.common.exceptions import AppException
 from api.models.attention_level import AttentionLevelPipeResponse, AttentionLevelResponse
 from api.models.emotions import EmotionsPipeResponse, EmotionsResponse
 from api.models.unified import UnifiedResponse
@@ -66,6 +68,11 @@ def analyze_unified(video_metadata: FullVideoMetadata):
     video_analysis = video_analyzer.run()
     emotions_analysis: EmotionsPipeResponse | None = video_analysis.get("emotions", None)
     attention_level_analysis: AttentionLevelPipeResponse | None = video_analysis.get("attentionLevel", None)
+    if emotions_analysis is None and attention_level_analysis is None:
+        raise AppException(
+            description="Unable to analyze video (all pipes failed)",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
     return UnifiedResponse(
         emotions=emotions_analysis,
         attention_level=attention_level_analysis,
