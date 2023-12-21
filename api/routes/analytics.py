@@ -55,7 +55,7 @@ def unified(request: UnifiedRequest) -> BaseResponse[UnifiedResponse]:
         result = analyze_unified(video_metadata)
         return BaseResponse(
             success=True, 
-            message="Attention level analyzed successfully",
+            message="Video analyzed successfully",
             data=result
         )
     except AppException as e:
