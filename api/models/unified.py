@@ -10,5 +10,4 @@ class UnifiedRequest(BaseModel):
 
 class UnifiedResponse(BaseModel):
     emotions: EmotionsPipeResponse | None
-    attention_level: AttentionLevelPipeResponse | None
     video_duration: DecimalField 

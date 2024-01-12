@@ -60,21 +60,16 @@ def analyze_unified(video_metadata: FullVideoMetadata):
         "emotions": EmotionsPipe(
             EmotionsSettings(video_settings=video_settings)
         ),
-        "attentionLevel": AttentionLevelPipe(
-            AttentionLevelSettings(video_settings=video_settings)
-        )
     }
     video_analyzer = VideoAnalyzer(video_settings, pipes)
     video_analysis = video_analyzer.run()
     emotions_analysis: EmotionsPipeResponse | None = video_analysis.get("emotions", None)
-    attention_level_analysis: AttentionLevelPipeResponse | None = video_analysis.get("attentionLevel", None)
-    if emotions_analysis is None and attention_level_analysis is None:
+    if emotions_analysis is None:
         raise AppException(
             description="Unable to analyze video (all pipes failed)",
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
     return UnifiedResponse(
         emotions=emotions_analysis,
-        attention_level=attention_level_analysis,
         video_duration=Decimal(str(video_metadata.duration)),   
     )
